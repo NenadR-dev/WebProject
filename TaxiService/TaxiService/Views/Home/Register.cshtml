@@ -1,0 +1,91 @@
+﻿<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $('document').ready(function () {
+            $('#add').click(function () {
+                let data = {
+                    Username: $('#username').val(),
+                    Password: $('#password').val(),
+                    Firstname: $('#firstname').val(),
+                    Lastname: $('#lastname').val(),
+                    JMBG: $('#jmbg').val(),
+                    ContactPhone: $('#contactphone').val(),
+                    Email: $('#email').val(),
+                    Gender: $('#gender').val(),
+                    Role: $('#role').val()
+                }
+                if (data.Role == "Client")
+                {
+                    $.post("/api/Client/AddClient", data)
+                        .done(function (data) {
+                            alert("New user added: " + data.Username);
+                        })
+                        .fail(function () {
+                            alert("Error cannot add data");
+                        });
+                    $(this).load("/Home/Index");
+                }
+                else
+                {
+                    $.post("/api/Driver/AddDriver", data)
+                        .done(function (data) {
+                            alert("New user added: " + data.Username);
+                        })
+                        .fail(function () {
+                            alert("Error cannot add data");
+                        });
+                    $(this).load("/Home/Index");
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="row" style="padding-top:20px">
+        <div class="col-md-10">
+            <label>Username: </label>
+            <input type="text" id="username" name="username" />
+        </div>
+        <div class="col-md-10">
+            <label>Password: </label>
+            <input type="password" id="password" name="password" />
+        </div>
+        <div class="col-md-10">
+            <label>Firstname: </label>
+            <input type="text" id="firstname" name="firstname" />
+        </div>
+        <div class="col-md-10">
+            <label>Lastname: </label>
+            <input type="text" id="lastname" name="lastname" />
+        </div>
+        <div class="col-md-10">
+            <label>Gender: </label>
+            <select id="gender" name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="col-md-10">
+            <label>JMBG: </label>
+            <input type="text" id="jmbg" name="jmbg" />
+        </div>
+        <div class="col-md-10">
+            <label>ContactPhone: </label>
+            <input type="text" id="contactphone" name="contactphone" />
+        </div>
+        <div class="col-md-10">
+            <label>Email: </label>
+            <input type="text" id="email" name="email" />
+        </div>
+        <div class="col-md-10">
+            <label>Role: </label>
+            <input type="text" id="role" name="username" value="@TempData["reg"]" readonly="readonly" disabled="disabled" />
+        </div>
+        <div class=" col-md-10">
+            <input type="submit" value="Add" id="add" name="add" />
+        </div>
+    </div>
+</body>
+</html>
