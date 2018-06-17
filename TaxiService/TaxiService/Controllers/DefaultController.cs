@@ -6,30 +6,51 @@ using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.Results;
 using TaxiService.Models;
+using TaxiService.Models.Base;
 
 namespace TaxiService.Controllers
 {
     public class DefaultController : ApiController
     {
         [HttpGet, Route("")]
+        [AllowAnonymous]
         public RedirectResult Index()
         {
             var route = Request.RequestUri.AbsoluteUri;
             return Redirect(route + "Home");
         }
 
-        public IHttpActionResult ValidateLogin(string Username,string Password)
+        private static LoginBase currentUser = new LoginBase();
+
+        [HttpPost,Route("api/Default/ValidateLogin")]
+        public IHttpActionResult ValidateLogin(LoginBase data)
         {
             DataAccess db = DataAccess.CreateDb();
-            if(db.clientDb.ToList().Exists(p=>p.Username == Username && p.Password==Password))
+            if (db.ClientDb.ToList().Exists(p => p.Username == data.Username && p.Password == data.Password))
             {
-                return Ok("Client");
+                currentUser = data;
+                currentUser.Role = db.ClientDb.ToList().Find(p => p.Username == data.Username).Role;
+                db.ClientDb.ToList().Find(p => p.Username == data.Username).LoggedIn = true;
+                currentUser.loggedIn = true;
+
+                return Ok(currentUser);
             }
-            if (db.driverDb.ToList().Exists(p => p.Username == Username && p.Password == Password))
+            if (db.DriverDb.ToList().Exists(p => p.Username == data.Username && p.Password == data.Password))
             {
-                return Ok("Driver");
+                currentUser = data;
+                currentUser.Role = db.DriverDb.ToList().Find(p => p.Username == data.Username).Role;
+                db.DriverDb.ToList().Find(p => p.Username == data.Username).LoggedIn = true;
+                currentUser.loggedIn = true;
+
+                return Ok(currentUser);
             }
             return NotFound();
+        }
+
+        [HttpGet, Route("api/Default/getUser")]
+        public LoginBase getUser()
+        {
+            return currentUser;
         }
     }
 }

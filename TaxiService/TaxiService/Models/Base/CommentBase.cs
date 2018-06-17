@@ -7,6 +7,7 @@ using System.Web;
 
 namespace TaxiService.Models
 {
+    
     public class CommentBase
     {
         [Key,ForeignKey("CommentRide")]

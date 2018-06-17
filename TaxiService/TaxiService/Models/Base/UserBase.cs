@@ -14,7 +14,7 @@ namespace TaxiService.Models
         public virtual int ID { get; set; }
 
         public String Username { get; set; }
-        
+         
         public String Password { get; set; }
 
         public String Firstname { get; set; }
@@ -31,6 +31,8 @@ namespace TaxiService.Models
 
         public UserRole Role { get; set; }
 
-        public List<RideBase> RideList { get; set; }
+        public bool LoggedIn { get; set; }
+
+        public ICollection<RideBase> RideList { get; set; }
     }
 }

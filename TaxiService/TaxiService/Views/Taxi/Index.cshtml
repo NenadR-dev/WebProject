@@ -1,0 +1,53 @@
+﻿@using TaxiService.Models.Base
+<head>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <meta charset="utf-8" />
+    <title>Taxi Service</title>
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $('document').ready(function () {
+            $.get("/api/Default/getUser", function (data, status) {
+                if (data.LoggedIn == false)
+                {
+                    alert("Please proceed to login");
+                    var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                    window.location.replace(path + "Home/Login");
+                }
+            });
+
+            $('#logoff').click(function () {
+                $.get("/api/Default/getUser", function (data, status) {
+                    $.post("/api/Client/Logoff", data)
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+                });
+            });
+
+            $('#profile').click(function () {
+                $.get("/api/Default/getUser", function (data, status) {
+                    var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                    window.location.replace(path + "Taxi/U/"+data.Username);
+                });
+            });
+        });
+    </script>
+</head>
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-header">
+        @Html.ActionLink("Taxi Service", "Index", "Taxi", new { @class = "navbar-brand" })
+    </div>
+    <div class="navbar-header navbar-right">
+        <button class="navbar-brand" id="profile">My Profile</button>
+        <button class="navbar-brand" id="logoff">Log Off</button>
+    </div>
+</div>
+<h3>Bravo bajo ovo radi!!</h3>
+<button class="btn btn-default" id="order">Order Taxi</button>

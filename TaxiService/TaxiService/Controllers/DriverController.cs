@@ -13,15 +13,15 @@ namespace TaxiService.Controllers
         public IHttpActionResult AddClient(Driver data)
         {
             DataAccess db = DataAccess.CreateDb();
-            if (!db.driverDb.ToList().Exists(p => p.Username == data.Username)
-                && !db.clientDb.ToList().Exists(p => p.Username == data.Username)
+            if (!db.DriverDb.ToList().Exists(p => p.Username == data.Username)
+                && !db.ClientDb.ToList().Exists(p => p.Username == data.Username)
                 && !db.DispacherDb.ToList().Exists(p => p.Username == data.Username))
             {
                 data.RideList = new List<RideBase>();
                 data.Car = new CarBase();
                 data.Location = new LocationBase();
-                data.ID = db.driverDb.ToList().Count + 1;
-                db.driverDb.Add(data);
+                data.ID = db.DriverDb.ToList().Count + 1;
+                db.DriverDb.Add(data);
             }
             db.SaveChanges();
             return Ok();

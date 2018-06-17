@@ -5,12 +5,13 @@
         $('document').ready(function () {
             $('#login').click(function() {
                 let data = {
-                    username: $('#username').val(),
-                    password: $('#password').val()
+                    Username: $('#username').val(),
+                    Password: $('#password').val()
                 }
-                $.post("/api/Default/Login", data)
-                    .done(function () {
-                        alert("Success");
+                $.post("/api/Default/ValidateLogin", data)
+                    .done(function (loggedUser) {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Taxi");
                     });
             });
         });

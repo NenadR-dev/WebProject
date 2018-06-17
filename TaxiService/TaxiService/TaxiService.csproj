@@ -188,11 +188,13 @@
     <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\DriverController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\TaxiController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Base\CarBase.cs" />
+    <Compile Include="Models\Base\LoginBase.cs" />
     <Compile Include="Models\Enums\CarRole.cs" />
     <Compile Include="Models\Client.cs" />
     <Compile Include="Models\Base\CommentBase.cs" />
@@ -266,6 +268,8 @@
     <Content Include="Views\Home\Register.cshtml" />
     <Content Include="Views\Home\Signup.cshtml" />
     <Content Include="Views\Home\Login.cshtml" />
+    <Content Include="Views\Taxi\Index.cshtml" />
+    <Content Include="Views\Taxi\Profile.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Client\" />

@@ -20,8 +20,10 @@ namespace TaxiService.Models
         }
         private DataAccess() : base("TaxiServiceDB") { }
 
-        public virtual DbSet<Client> clientDb { get; set; }
-        public virtual DbSet<Driver> driverDb { get; set; }
+        public virtual DbSet<Client> ClientDb { get; set; }
+        public virtual DbSet<Driver> DriverDb { get; set; }
         public virtual DbSet<Dispacher> DispacherDb { get; set; }
+        public virtual DbSet<RideBase> RideDb { get; set; }
+
     }
 }
