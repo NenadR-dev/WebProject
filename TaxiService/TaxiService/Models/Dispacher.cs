@@ -10,7 +10,7 @@ namespace TaxiService.Models
     public class Dispacher : UserBase
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public override int ID { get; set; }
 
         public Dispacher() : base() { }

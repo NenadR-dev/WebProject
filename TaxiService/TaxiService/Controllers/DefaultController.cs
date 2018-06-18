@@ -30,8 +30,6 @@ namespace TaxiService.Controllers
             {
                 currentUser = data;
                 currentUser.Role = db.ClientDb.ToList().Find(p => p.Username == data.Username).Role;
-                db.ClientDb.ToList().Find(p => p.Username == data.Username).LoggedIn = true;
-                currentUser.loggedIn = true;
 
                 return Ok(currentUser);
             }
@@ -39,8 +37,6 @@ namespace TaxiService.Controllers
             {
                 currentUser = data;
                 currentUser.Role = db.DriverDb.ToList().Find(p => p.Username == data.Username).Role;
-                db.DriverDb.ToList().Find(p => p.Username == data.Username).LoggedIn = true;
-                currentUser.loggedIn = true;
 
                 return Ok(currentUser);
             }

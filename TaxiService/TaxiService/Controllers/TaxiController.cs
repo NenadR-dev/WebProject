@@ -21,5 +21,10 @@ namespace TaxiService.Controllers
 
             return View("Profile",db.ClientDb.ToList().Find(p => p.Username == id));
         }
+
+        public ActionResult OrderRide()
+        {
+            return View();
+        }
     }
 }

@@ -25,13 +25,11 @@ namespace TaxiService.Models
 
         public String JMBG { get; set; }
 
-        public ushort ContactPhone { get; set; }
+        public int ContactPhone { get; set; }
 
         public String Email { get; set; }
 
-        public UserRole Role { get; set; }
-
-        public bool LoggedIn { get; set; }
+        public String Role { get; set; }
 
         public ICollection<RideBase> RideList { get; set; }
     }

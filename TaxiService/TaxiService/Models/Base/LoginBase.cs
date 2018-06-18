@@ -11,8 +11,6 @@ namespace TaxiService.Models.Base
 
         public string Password { get; set; }
 
-        public UserRole Role { get; set; }
-
-        public bool loggedIn { get; set; }
+        public String Role { get; set; }
     }
 }

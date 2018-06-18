@@ -151,6 +151,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\AdminConfig.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\DatabaseConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -270,6 +271,7 @@
     <Content Include="Views\Home\Login.cshtml" />
     <Content Include="Views\Taxi\Index.cshtml" />
     <Content Include="Views\Taxi\Profile.cshtml" />
+    <Content Include="Views\Taxi\OrderRide.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Client\" />

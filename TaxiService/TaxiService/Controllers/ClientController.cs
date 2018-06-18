@@ -11,6 +11,10 @@ namespace TaxiService.Controllers
 {
     public class ClientController : ApiController
     {
+        private static LocationBase CurrentLocation = null;
+        private static LocationBase Destination = null;
+        private static CarRole CarType = CarRole.Not_Specified;
+        private static Client LoggedClient = null;
 
         [HttpPost,Route("api/Client/AddClient")]
         public IHttpActionResult AddClient(Client data)
@@ -21,12 +25,11 @@ namespace TaxiService.Controllers
                     && !db.DispacherDb.ToList().Exists(p => p.Username == data.Username))
             {
                 data.RideList = new List<RideBase>();
-                data.LoggedIn = false;
                 data.ID = db.ClientDb.ToList().Count() + 1;
                 db.ClientDb.Add(data);
             }
             db.SaveChanges();
-            return Ok();
+            return Ok(data);
         }
 
         [HttpPost,Route("api/Client/Update")]
@@ -48,15 +51,63 @@ namespace TaxiService.Controllers
         [HttpPost,Route("api/Client/LogOff")]
         public IHttpActionResult LogOff(LoginBase data)
         {
-            DataAccess db = DataAccess.CreateDb();
-            db.ClientDb.ToList().Find(p => p.Username == data.Username).LoggedIn = false;
+            return Ok(data);
+        }
+
+        [HttpPost,Route("api/Client/AddLocation")]
+        public IHttpActionResult AddLocation(LocationBase data)
+        {
+            CurrentLocation = data;
+            CurrentLocation.XCoordinate = 0;
+            CurrentLocation.YCoordinate = 10;
+            return Ok();
+        }
+        
+        [HttpPost,Route("api/Client/AddDestination")]
+        public IHttpActionResult AddDestination(LocationBase data)
+        {
+            Destination = data;
+            Destination.XCoordinate = 10;
+            Destination.YCoordinate = 0;
+            return Ok();
+        }
+
+        [HttpPost,Route("api/Client/AddCarType")]
+        public IHttpActionResult AddCarType(int data)
+        {
+            CarType = (CarRole)data;
             return Ok();
         }
 
         [HttpPost,Route("api/Client/OrderRide")]
         public IHttpActionResult OrderRide(LoginBase data)
         {
-            
+            DataAccess db = DataAccess.CreateDb();
+            LoggedClient = db.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password);
+            List<Client> temp = new List<Client>();
+            temp.Add(LoggedClient);
+
+            LoggedClient.RideList = new List<RideBase>
+            {
+                new RideBase()
+                {
+                    CarType = CarType,
+                    Status = RideStatus.Created,
+                    RideClient = LoggedClient.ID,
+                    RideClients = temp,
+                    CommentID = null,
+                    Location = CurrentLocation,
+                    Destination = Destination,
+                    DispacherID = null,
+                    RidePrice = 500,
+                    RiderOrderDate = DateTime.Now.ToShortDateString(),
+                    DriverID = null
+                }
+            };
+            db.ClientDb.ToList()[db.ClientDb.ToList().IndexOf(db.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password))] = LoggedClient;
+
+            db.SaveChanges();
+
             return Ok();
         }
     }

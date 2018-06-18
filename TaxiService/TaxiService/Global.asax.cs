@@ -20,6 +20,7 @@ namespace TaxiService
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             DatabaseConfig db = new DatabaseConfig();
+            AdminConfig.LoadAdmins();
         }
     }
 }

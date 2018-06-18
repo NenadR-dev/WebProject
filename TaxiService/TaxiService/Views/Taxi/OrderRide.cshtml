@@ -1,0 +1,100 @@
+﻿<head>
+    <style>
+        .column{
+            float: left;
+            width: 33.33%;
+        }
+        .row::after{
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+    <meta charset="utf-8" />
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $('document').ready(function () {
+            $('#orderride').click(function () {
+                let location = {
+                    StreetName: $('#address').val(),
+                    Place: $('#place').val(),
+                    zipcode: $('#zip').val()
+                }
+                $.post("/api/Client/AddLocation", location)
+                    .fail(function () {
+                        alert("Invalid current location")
+                    });
+                let destination = {
+                    StreetName: $('#destAddress').val(),
+                    Place: $('#destPlace').val(),
+                    zipcode: $('#destZip').val()
+                }
+                $.post("/api/Client/AddDestination", destination)
+                    .fail(function () {
+                        alert("Destination invalid")
+                    });
+                let carType = {
+                    carrole: $('#cartype').val()
+                }
+                $.post("/api/Client/AddCarType", carType).
+                    fail(function () {
+                        alert("Failed car type")
+                    });
+                $.get("/api/Default/getUser", function (data, status) {
+                    $.post("/api/Client/OrderRide", data)
+                        .done(function () {
+                            alert("Ride ordered");
+                        });
+                });
+            });
+        });
+    </script>
+</head>
+
+<div class="row">
+    <div class="column">
+        <h3>Current Location</h3>
+        <div class="col-md-10">
+            <label>StreetName:</label>
+            <input type="text" id="address" />
+        </div>
+        <div class="col-md-10">
+            <label>Place:</label>
+            <input type="text" id="place" />
+        </div>
+        <div class="col-md-10">
+            <label>Zip code</label>
+            <input type="number" id="zip" />
+        </div>
+    </div>
+    <div class="column">
+        <h3>Destination Address</h3>
+        <div class="col-md-10">
+            <label>StreetName:</label>
+            <input type="text" id="destAddress" />
+        </div>
+        <div class="col-md-10">
+            <label>Place:</label>
+            <input type="text" id="destPlace" />
+        </div>
+        <div class="col-md-10">
+            <label>Zip code</label>
+            <input type="number" id="destZip"  />
+        </div>
+    </div>
+    <div class="column">
+        <h3>Select Car Type</h3>
+        <div class="col-md-10">
+            <label>Car type:</label>
+            <select id="cartype">
+                <option selected="selected" value="0">Not Specified</option>
+                <option value="1">Sedan</option>
+                <option value="2">Van</option>
+            </select>
+        </div>
+        <div class="col-md-10">
+            <label>Order</label>
+            <input type="submit" id="orderride" class="btn btn-default" />
+        </div>
+    </div>
+</div>

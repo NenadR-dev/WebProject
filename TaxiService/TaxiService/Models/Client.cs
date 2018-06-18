@@ -10,7 +10,7 @@ namespace TaxiService.Models
     public class Client : UserBase
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public override int ID { get; set; }
 
         public Client() : base() { }

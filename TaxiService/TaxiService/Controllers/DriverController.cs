@@ -18,7 +18,7 @@ namespace TaxiService.Controllers
                 && !db.DispacherDb.ToList().Exists(p => p.Username == data.Username))
             {
                 data.RideList = new List<RideBase>();
-                data.Car = new CarBase();
+                data.CarID = -1;
                 data.Location = new LocationBase();
                 data.ID = db.DriverDb.ToList().Count + 1;
                 db.DriverDb.Add(data);
