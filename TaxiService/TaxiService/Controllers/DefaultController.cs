@@ -47,6 +47,7 @@ namespace TaxiService.Controllers
         public LoginBase getUser()
         {
             return currentUser;
+            
         }
     }
 }

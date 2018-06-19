@@ -20,6 +20,6 @@ namespace TaxiService.Models
 
         public ushort CarId { get; set; }
 
-        public CarRole CarType { get; set; }
+        public String CarType { get; set; }
     }
 }

@@ -17,7 +17,7 @@ namespace TaxiService.Models
 
         public LocationBase Location { get; set; }
 
-        public CarRole CarType { get; set; }
+        public String CarType { get; set; }
 
         public int RideClient { get; set; }
 
@@ -34,6 +34,6 @@ namespace TaxiService.Models
         //public int CommentID { get; set; }
         public virtual CommentBase CommentID { get; set; }
 
-        public RideStatus Status { get; set; }
+        public String Status { get; set; }
     }
 }

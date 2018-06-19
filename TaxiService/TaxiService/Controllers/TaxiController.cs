@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
+using System.Threading;
 using System.Web;
 using System.Web.Mvc;
 using TaxiService.Models;
@@ -10,6 +12,7 @@ namespace TaxiService.Controllers
     public class TaxiController : Controller
     {
         // GET: Taxi
+
         public ActionResult Index()
         {
             return View();
@@ -26,5 +29,6 @@ namespace TaxiService.Controllers
         {
             return View();
         }
+
     }
 }
