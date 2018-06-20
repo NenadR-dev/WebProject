@@ -10,7 +10,7 @@ namespace TaxiService.Models
     
     public class CommentBase
     {
-        [Key,ForeignKey("CommentRide")]
+        [Key,DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { get; set; }
 
         public String Summary { get; set; }
@@ -20,8 +20,8 @@ namespace TaxiService.Models
         //public int ClientID { get; set; }
         public virtual Client ClientID { get; set; }
 
-        //public int RideID { get; set; }
-        public virtual RideBase CommentRide { get; set; }
+        public int RideID { get; set; }
+        //public virtual RideBase CommentRide { get; set; }
 
         [Range(0,5)]
         public ushort Stars { get; set; }

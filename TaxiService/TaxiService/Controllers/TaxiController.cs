@@ -12,7 +12,6 @@ namespace TaxiService.Controllers
     public class TaxiController : Controller
     {
         // GET: Taxi
-
         public ActionResult Index()
         {
             return View();

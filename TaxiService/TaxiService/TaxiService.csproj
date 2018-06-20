@@ -189,6 +189,7 @@
     <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\DriverController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\JobTaxiController.cs" />
     <Compile Include="Controllers\TaxiController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Global.asax.cs">
@@ -210,6 +211,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Data\Images\rating_background.jpg" />
+    <Content Include="App_Data\Images\rating_onbackground.jpg" />
+    <Content Include="App_Data\Images\stars_large_sprite.jpg" />
+    <Content Include="App_Data\Images\stars_small_sprite.jpg" />
     <Content Include="App_Data\TaxiServiceDB.mdf" />
     <Content Include="App_Data\TaxiServiceDB_log.ldf">
       <DependentUpon>TaxiServiceDB.mdf</DependentUpon>
@@ -272,6 +277,8 @@
     <Content Include="Views\Taxi\Index.cshtml" />
     <Content Include="Views\Taxi\Profile.cshtml" />
     <Content Include="Views\Taxi\OrderRide.cshtml" />
+    <Content Include="Views\JobTaxi\Profile.cshtml" />
+    <Content Include="Views\JobTaxi\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Client\" />

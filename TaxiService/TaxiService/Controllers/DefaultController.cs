@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Principal;
+using System.Threading;
+using System.Web;
 using System.Web.Http;
 using System.Web.Http.Results;
 using TaxiService.Models;
@@ -30,7 +33,6 @@ namespace TaxiService.Controllers
             {
                 currentUser = data;
                 currentUser.Role = db.ClientDb.ToList().Find(p => p.Username == data.Username).Role;
-
                 return Ok(currentUser);
             }
             if (db.DriverDb.ToList().Exists(p => p.Username == data.Username && p.Password == data.Password))

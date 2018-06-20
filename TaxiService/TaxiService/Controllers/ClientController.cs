@@ -93,47 +93,88 @@ namespace TaxiService.Controllers
         [HttpPost,Route("api/Client/OrderRide")]
         public IHttpActionResult OrderRide(LoginBase data)
         {
-            LoggedClient = DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password);
+            try
+            {
+                LoggedClient = DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password);
 
-            LoggedClient.RideList = new List<RideBase>
+                LoggedClient.RideList = new List<RideBase>
             {
                 new RideBase()
                 {
                     CarType = CarType,
                     Status = RideStatus.Created,
                     RideClient = LoggedClient.ID,
-                    CommentID = null,
+                    CommentID = 0,
                     Location = CurrentLocation,
                     Destination = Destination,
-                    DispacherID = null,
+                    AdminID = 0,
                     RidePrice = 0,
                     RiderOrderDate = DateTime.Now.ToString(),
-                    DriverID = null
+                    TaxiRiderID = 0
                 }
             };
-            DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password))] = LoggedClient;
+                DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password))] = LoggedClient;
 
-            DB.SaveChanges();
+                DB.SaveChanges();
 
-            return Ok();
+                return Ok();
+            }
+            catch
+            {
+                return NotFound();
+            }
+
         }
 
         [HttpGet,Route("api/Client/getRides")]
         public IHttpActionResult getRides()
         {
             List<RideBase> rides = DB.RideDb.ToList();
-            rides.ForEach(ride =>
+            if (rides.Count != 0)
             {
-                ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
-                ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
-            });
-            return Ok(rides);
+                rides.ForEach(ride =>
+                {
+                    ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
+                    ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
+                });
+                return Ok(rides);
+            }
+            return NotFound();
+            
         }
 
-        [HttpPost,Route("api/Client/getComment{id:int}")]
+        [HttpGet,Route("api/Client/getComment{id:int}")]
         public IHttpActionResult getComment(int id)
         {
-            return Ok(DB.CommentDb.ToList().Find(p=>p.ID == id));
+            lock (DB)
+            {
+                CommentBase comment = DB.CommentDb.ToList().Find(p => p.RideID == id);
+                return Ok(comment ?? new CommentBase());
+            }
+        }
+        [HttpPost,Route("api/Client/addComment")]
+        public IHttpActionResult addComment(CommentBase data)
+        {
+            RideBase ride = DB.RideDb.ToList().Find(p => p.ID == data.ID);
+            List<CommentBase> comment = DB.CommentDb.ToList();
+            if(!comment.Exists(p=>p.RideID == data.ID))
+            {
+                DB.CommentDb.Add(new CommentBase()
+                {
+                    CommentDate = DateTime.Now.ToString(),
+                    Stars = data.Stars,
+                    Summary = data.Summary,
+                    ClientID = DB.ClientDb.ToList().Find(p=>p.ID == ride.RideClient),
+                    RideID = ride.ID
+                });
+                ride.CommentID = data.ID;
+                ride.Status = RideStatus.Canceled;
+                DB.SaveChanges();
+
+                return Ok(DB.CommentDb.ToList().Find(p => p.RideID == data.ID));
+            }
+            return NotFound();
+
         }
     }
 }

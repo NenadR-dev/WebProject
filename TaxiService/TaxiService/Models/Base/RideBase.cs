@@ -23,16 +23,16 @@ namespace TaxiService.Models
 
         public LocationBase Destination { get; set; }
 
-        //public int DispacherID { get; set; }
-        public virtual Dispacher DispacherID { get; set; }
+        public int AdminID { get; set; }
+        //public virtual Dispacher DispacherID { get; set; }
 
-        //public int DriverID { get; set; }
-        public virtual Driver DriverID { get; set; }
+        public int TaxiRiderID { get; set; }
+        //public virtual Driver DriverID { get; set; }
 
         public double RidePrice { get; set; }
         
-        //public int CommentID { get; set; }
-        public virtual CommentBase CommentID { get; set; }
+        public int CommentID { get; set; }
+        //public virtual CommentBase CommentID { get; set; }
 
         public String Status { get; set; }
     }
