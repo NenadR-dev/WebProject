@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
+using TaxiService.Models.Base;
 
 namespace TaxiService.Models
 {
@@ -27,5 +28,6 @@ namespace TaxiService.Models
         public virtual DbSet<CommentBase> CommentDb { get; set; }
         public virtual DbSet<CarBase> CarDb { get; set; }
         public virtual DbSet<LocationBase> LocationDb { get; set; }
+        public virtual DbSet<LoginBase> UserDb { get; set; }
     }
 }

@@ -14,9 +14,7 @@
                     ContactPhone: $('#contactphone').val(),
                     Email: $('#email').val(),
                     Gender: $('#gender').val(),
-                    Role: $('#role').val()
                 }
-                if (data.Role == "Client") {
                     $.post("/api/Client/AddClient", data)
                         .done(function (data) {
                             alert("New user added: " + data.Username);
@@ -26,20 +24,6 @@
                         .fail(function () {
                             alert("Error cannot add data");
                         });
-                }
-                else
-                {
-                    $.post("/api/Driver/AddDriver", data)
-                        .done(function (data) {
-                            alert("New user added: " + data.Username);
-                            var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
-                            window.location.replace(path + "Home");
-                        })
-                        .fail(function () {
-                            alert("Error cannot add data");
-                        });
-                }
-
             });
         });
     </script>
@@ -80,10 +64,6 @@
         <div class="col-md-10">
             <label>Email: </label>
             <input type="text" id="email" name="email" />
-        </div>
-        <div class="col-md-10">
-            <label>Role: </label>
-            <input type="text" id="role" name="username" value="@TempData["reg"]" readonly="readonly" disabled="disabled" />
         </div>
         <div class=" col-md-10">
             <input type="submit" value="Add" id="add" name="add" />

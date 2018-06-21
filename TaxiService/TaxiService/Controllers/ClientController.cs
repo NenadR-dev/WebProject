@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
+using System.Web;
 using System.Web.Http;
 using TaxiService.Models;
 using TaxiService.Models.Base;
+using TaxiService.Models.Security;
 
 namespace TaxiService.Controllers
 {
@@ -14,11 +17,25 @@ namespace TaxiService.Controllers
         private static LocationBase CurrentLocation = null;
         private static LocationBase Destination = null;
         private static String CarType = CarRole.Not_Specified;
-        private static Client LoggedClient = null;
+        public CustomPrincipal AuthUser
+        {
+            get
+            {
+                if (HttpContext.Current.User != null)
+                {
+                    return HttpContext.Current.User as CustomPrincipal;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         DataAccess DB = DataAccess.CreateDb();
 
         [HttpPost,Route("api/Client/AddClient")]
+        [AllowAnonymous]
         public IHttpActionResult AddClient(Client data)
         {
             if (!DB.DriverDb.ToList().Exists(p => p.Username == data.Username)
@@ -27,6 +44,13 @@ namespace TaxiService.Controllers
             {
                 data.RideList = new List<RideBase>();
                 data.ID = DB.ClientDb.ToList().Count() + 1;
+                data.Role = UserRole.ClientRole;
+                DB.UserDb.Add(new LoginBase()
+                {
+                    Username = data.Username,
+                    Password = data.Password,
+                    Role = data.Role
+                });
                 DB.ClientDb.Add(data);
             }
             DB.SaveChanges();
@@ -51,7 +75,8 @@ namespace TaxiService.Controllers
         [HttpPost,Route("api/Client/LogOff")]
         public IHttpActionResult LogOff(LoginBase data)
         {
-            return Ok(data);
+            System.Web.Security.FormsAuthentication.SignOut();
+            return Ok();
         }
 
         [HttpPost,Route("api/Client/AddLocation")]
@@ -91,11 +116,11 @@ namespace TaxiService.Controllers
         }
 
         [HttpPost,Route("api/Client/OrderRide")]
-        public IHttpActionResult OrderRide(LoginBase data)
+        public IHttpActionResult OrderRide()
         {
             try
             {
-                LoggedClient = DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password);
+                Client LoggedClient = DB.ClientDb.ToList().Find(p=> p.Username == AuthUser.Username);
 
                 LoggedClient.RideList = new List<RideBase>
             {
@@ -113,7 +138,7 @@ namespace TaxiService.Controllers
                     TaxiRiderID = 0
                 }
             };
-                DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == data.Username && p.Password == data.Password))] = LoggedClient;
+                DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username))] = LoggedClient;
 
                 DB.SaveChanges();
 
@@ -130,6 +155,7 @@ namespace TaxiService.Controllers
         public IHttpActionResult getRides()
         {
             List<RideBase> rides = DB.RideDb.ToList();
+            Client user = DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
             if (rides.Count != 0)
             {
                 rides.ForEach(ride =>
@@ -137,7 +163,7 @@ namespace TaxiService.Controllers
                     ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
                     ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
                 });
-                return Ok(rides);
+                return Ok(rides.Where(p=>p.RideClient == user.ID));
             }
             return NotFound();
             

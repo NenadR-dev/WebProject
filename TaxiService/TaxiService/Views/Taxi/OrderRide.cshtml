@@ -14,7 +14,8 @@
     <script src="~/Scripts/jquery-1.10.2.js"></script>
     <script type="text/javascript">
         $('document').ready(function () {
-            $('#orderride').click(function () {
+
+            function ClientOrder() {
                 let location = {
                     StreetName: $('#address').val(),
                     Place: $('#place').val(),
@@ -43,6 +44,47 @@
                         .done(function () {
                             alert("Ride ordered");
                         });
+                });
+            }
+            function DispacherOrder() {
+                let location = {
+                    StreetName: $('#address').val(),
+                    Place: $('#place').val(),
+                    zipcode: $('#zip').val()
+                }
+                $.post("/api/Dispacher/AddLocation", location)
+                    .fail(function () {
+                        alert("Invalid current location")
+                    });
+                let destination = {
+                    StreetName: $('#destAddress').val(),
+                    Place: $('#destPlace').val(),
+                    zipcode: $('#destZip').val()
+                }
+                $.post("/api/Dispacher/AddDestination", destination)
+                    .fail(function () {
+                        alert("Destination invalid")
+                    });
+
+                $.post("/api/Dispacher/AddCarType/" + $('#cartype').val()).
+                    fail(function () {
+                        alert("Failed car type")
+                    });
+                $.get("/api/Default/getUser", function (data, status) {
+                    $.post("/api/Dispacher/OrderRide", data)
+                        .done(function () {
+                            alert("Ride ordered");
+                        });
+                });
+            }
+            $('#orderride').click(function () {
+                $.get("/api/Default/getUser", function (data, status) {
+                    if (data.Role == "Client") {
+                        ClientOrder();
+                    }
+                    else {
+                        DispacherOrder();
+                    }
                 });
             });
         });

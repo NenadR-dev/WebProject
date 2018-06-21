@@ -5,10 +5,10 @@ using System.Web;
 
 namespace TaxiService.Models
 {
-    public enum UserRole
+    public class UserRole
     {
-        Client,
-        Driver,
-        Dispacher
+        public static string ClientRole = "Client";
+        public static string DriverRole = "Driver";
+        public static string DispacherRole = "Dispacher";
     }
 }

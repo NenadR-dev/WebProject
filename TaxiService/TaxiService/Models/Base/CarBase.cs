@@ -18,7 +18,7 @@ namespace TaxiService.Models
 
         public String CarRegistration { get; set; }
 
-        public ushort CarId { get; set; }
+        public ushort TaxiCarID { get; set; }
 
         public String CarType { get; set; }
     }

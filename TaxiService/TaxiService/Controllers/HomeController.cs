@@ -10,6 +10,7 @@ namespace TaxiService.Controllers
 {
     public class HomeController : Controller
     {
+        [AllowAnonymous]
         public ActionResult Index()
         {
             
@@ -17,16 +18,17 @@ namespace TaxiService.Controllers
 
             return View();
         }
+        [AllowAnonymous]
         public ActionResult Register(int id)
         {
-            TempData["reg"] = (id == 1) ? "Client" : "Driver";
             return View();
         }
+        [AllowAnonymous]
         public ActionResult Signup()
         {
             return View();
         }
-
+        [AllowAnonymous]
         public ActionResult Login()
         {
             return View();
