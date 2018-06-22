@@ -10,7 +10,7 @@ namespace TaxiService.Controllers
 {
     public class DriverController : ApiController
     {
-        public IHttpActionResult AddClient(Driver data)
+        public IHttpActionResult AddDriver(Driver data)
         {
             DataAccess db = DataAccess.CreateDb();
             if (!db.DriverDb.ToList().Exists(p => p.Username == data.Username)
@@ -18,7 +18,7 @@ namespace TaxiService.Controllers
                 && !db.DispacherDb.ToList().Exists(p => p.Username == data.Username))
             {
                 data.RideList = new List<RideBase>();
-                data.CarID = -1;
+                data.CarID = 0;
                 data.Location = new LocationBase();
                 data.ID = db.DriverDb.ToList().Count + 1;
                 db.DriverDb.Add(data);

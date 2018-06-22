@@ -197,6 +197,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Base\AssignBase.cs" />
+    <Compile Include="Models\Base\DriverCreationBase.cs" />
     <Compile Include="Models\Base\CarBase.cs" />
     <Compile Include="Models\Base\LoginBase.cs" />
     <Compile Include="Models\Enums\CarRole.cs" />

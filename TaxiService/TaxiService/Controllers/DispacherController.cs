@@ -44,28 +44,29 @@ namespace TaxiService.Controllers
         }
 
         [HttpPost, Route("api/Dispacher/AddDriver")]
-        public IHttpActionResult AddDriver(AssignBase data)
+        public IHttpActionResult AddDriver(DriverCreationBase data)
         {
             if (!DB.DriverDb.ToList().Exists(p => p.Username == data.Driver.Username)
                     && !DB.ClientDb.ToList().Exists(p => p.Username == data.Driver.Username)
                     && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Driver.Username))
             {
-                data.Car.Owner = data.Driver;
-                DB.CarDb.Add(data.Car);
+                data.Driver.ID = DB.DriverDb.ToList().Count + 1;
+                data.Car.ID = DB.CarDb.ToList().Count + 1;
+                data.Car.OwnerID = data.Driver.ID;
+                data.Driver.CarID = data.Car.TaxiCarID;
                 data.Driver.RideList = new List<RideBase>();
-                data.Driver.ID = DB.DriverDb.ToList().Count() + 1;
-                data.Driver.Role = UserRole.DriverRole;
-                data.Driver.CarID = data.Car.ID;
+
                 DB.UserDb.Add(new LoginBase()
                 {
                     Username = data.Driver.Username,
                     Password = data.Driver.Password,
                     Role = data.Driver.Role
                 });
+                DB.CarDb.Add(data.Car);
                 DB.DriverDb.Add(data.Driver);
             }
             DB.SaveChanges();
-            return Ok(data.Driver);
+            return Ok();
         }
 
         [HttpPost, Route("api/Dispacher/Update")]
@@ -90,6 +91,18 @@ namespace TaxiService.Controllers
             return Ok();
         }
 
+        [HttpPost,Route("api/Dispacher/AssignDriver")]
+        public IHttpActionResult AssignDriver(AssignBase assign)
+        {
+            lock (DB)
+            {
+                DB.RideDb.ToList().Find(p => p.ID == assign.RideID).TaxiRiderID = assign.DriverID;
+                DB.RideDb.ToList().Find(p => p.ID == assign.RideID).Status = RideStatus.Processed;
+                DB.RideDb.ToList().Find(p => p.ID == assign.RideID).AdminID = AuthUser.ID;
+                DB.SaveChanges();
+                return Ok(DB.DriverDb.ToList().Find(p => p.ID == assign.DriverID).Firstname);
+            }
+        }
         [HttpPost, Route("api/Dispacher/AddLocation")]
         public IHttpActionResult AddLocation(LocationBase data)
         {

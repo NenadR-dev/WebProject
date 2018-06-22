@@ -10,7 +10,7 @@ namespace TaxiService.Models
     public class Driver : UserBase
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public override int ID { get; set; }
 
         public LocationBase Location { get; set; }
@@ -20,7 +20,7 @@ namespace TaxiService.Models
 
         public Driver() : base()
         {
-            CarID = -1;
+            CarID = 0;
             Location = new LocationBase();
         }
 

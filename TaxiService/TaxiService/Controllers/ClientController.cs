@@ -43,7 +43,7 @@ namespace TaxiService.Controllers
                     && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Username))
             {
                 data.RideList = new List<RideBase>();
-                data.ID = DB.ClientDb.ToList().Count() + 1;
+               // data.ID = DB.ClientDb.ToList().Count() + 1;
                 data.Role = UserRole.ClientRole;
                 DB.UserDb.Add(new LoginBase()
                 {

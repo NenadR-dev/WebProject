@@ -64,8 +64,8 @@
                     driver
                 }
                 $.post("/api/Dispacher/AddDriver", data)
-                    .done(function (data) {
-                        alert("New driver added: " + data.Username);
+                    .done(function (driver) {
+                        alert("New driver added: " + driver.Username);
                     })
                     .fail(function () {
                         alert("Error cannot add data");
@@ -135,7 +135,7 @@
         <div class="centered">
             <h3>Select drivers car:</h3>
             <div>
-                <label>Car ID:</label>
+                <label>TaxiCar ID:</label>
                 <input type="number" id="taxiCarID" required />
             </div>
             <div>

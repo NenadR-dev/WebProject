@@ -7,7 +7,7 @@ namespace TaxiService.Models.Base
 {
     public class AssignBase
     {
-        public Driver Driver { get; set; }
-        public CarBase Car { get; set; }
+        public int DriverID { get; set; }
+        public int RideID { get; set; }
     }
 }

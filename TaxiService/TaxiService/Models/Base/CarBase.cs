@@ -9,16 +9,17 @@ namespace TaxiService.Models
 {
     public class CarBase
     {
-        [Key,ForeignKey("Owner")]
+        [Key,DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int ID { get; set; }
 
-        public Driver Owner { get; set; }
+        public int OwnerID { get; set; }
+        //public Driver Owner { get; set; }
 
-        public ushort CarAge { get; set; }
+        public int CarAge { get; set; }
 
         public String CarRegistration { get; set; }
 
-        public ushort TaxiCarID { get; set; }
+        public int TaxiCarID { get; set; }
 
         public String CarType { get; set; }
     }

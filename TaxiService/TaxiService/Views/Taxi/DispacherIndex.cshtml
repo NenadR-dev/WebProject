@@ -67,13 +67,13 @@
                         if (data[item].Status == "Created")
                         {
                             $.get("/api/Dispacher/getFreeDrivers/"+data[item].ID, function (drivers, status) {
-                                let assignData = `<div class="row"><div><label>Assign Driver</label></div>`;
-                                assignData += `<div><select>`;
+                                let assignData = `<div><label>Assign Driver</label></div>`;
+                                assignData += `<div><select name="${data[item].ID}" id="DriverID${drivers.ID}">`;
                                 for (node in drivers) {
                                     assignData += `<option value="${drivers[node].ID}">${drivers[node].Firstname} ${drivers[node].Lastname}</option>`;
                                 }
                                 assignData += `</select></div>`;
-                                assignData += `<button id="assignDriverBtn" class="btn btn-default" type="submit">Assign</button></div>`;
+                                assignData += `<button id="assignDriverBtn" name="${drivers.ID}" class="btn btn-default" type="submit">Assign</button>`;
                                 $(currentAssign).html(assignData);
                             });
                         }
@@ -89,12 +89,13 @@
                                          <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"></td></tr></table>`;
-                        displayRides += `<div id="CommentSection${data[item].ID}"></div></div><br/><br/><br/><br/>`;
+                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div><br/><br/><br/><br/>`;
                     }
                     displayRides += `</div>`;
-                    $('#otherRidesDiv').html(displayRides);
+                    $('#dispacherRidesDiv').html(displayRides);
                     for (item in data) {
                         let currentComment = `#CommentSection${data[item].ID}`;
+                        let currentAssign = `#AssignDiv${data[item].ID}`;
                         let btnHtml = "";
                         $.get("/api/Dispacher/getComment" + data[item].ID, function (commentData, status) {
                             if (commentData != undefined)
@@ -107,9 +108,38 @@
                                 $(currentComment).html(commentDiv);
                             }
                         });
+                        if (data[item].Status == "Formated") {
+                            $.get("/api/Dispacher/getFreeDrivers/" + data[item].ID, function (drivers, status) {
+                                let assignData = `<div><label>Assign Driver</label></div>`;
+                                assignData += `<div><select id="DriverID" name="${drivers.ID}">`;
+                                for (node in drivers) {
+                                    assignData += `<option value="${drivers.ID}">${drivers.Firstname} ${drivers.Lastname}</option>`;
+                                }
+                                assignData += `</select></div>`;
+                                assignData += `<button id="assignDriverBtn" name="${drivers.ID}" class="btn btn-default" type="submit">Assign</button>`;
+                                $(currentAssign).html(assignData);
+                            });
+                        }
                     }
                 })
             }
+            $(document).on('click', '#assignDriverBtn',function () {
+                let ChosenDriverID = $(this).attr('name');
+                let ChosenDriver = $('#DriverID' + ChosenDriverID).val()
+                let ChosenRide = $('#DriverID' + ChosenDriverID).attr('name');
+                let data = {
+                    DriverID: ChosenDriver,
+                    RideID: ChosenRide
+                }
+                $.post("/api/Dispacher/AssignDriver", data)
+                    .done(function (driver) {
+                        alert("Driver: " + driver + " assigned.");
+                        LoadRides();
+                    })
+                    .fail(function () {
+                        alert("Error occured while assigning the driver");
+                    });
+            });
 
             $('#updateRides').click(function () {
                 LoadRides();
@@ -138,11 +168,8 @@
     </div>
 </div>
 
+<div id="container" style="width:100%;">
+    <div id="dispacherRidesDiv" style="float:left; width:50%;" class="col-md-5 col-sm-pull-1"></div>
+    <div id="otherRidesDiv" style="float:right; width:50%;" class="col-md-5 col-sm-push-1"></div>
+</div> 
 
-
-
-<div class="row">
-    <div id="dispacherRidesDiv"></div>
-
-    <div id="otherRidesDiv"></div>
-</div>
