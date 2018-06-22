@@ -93,7 +93,7 @@
                 let data = {
                     ID: $(this).attr('name'),
                     Summary: $('#Com_' + $(this).attr('name')).val(),
-                    Stars: $('starField_' + $(this).attr('name')).val()
+                    Stars: $('#starField_' + $(this).attr('name')).val()
                 }
 
                 $.post("/api/Client/addComment", data)

@@ -24,6 +24,6 @@ namespace TaxiService.Models
         //public virtual RideBase CommentRide { get; set; }
 
         [Range(0,5)]
-        public ushort Stars { get; set; }
+        public int Stars { get; set; }
     }
 }
