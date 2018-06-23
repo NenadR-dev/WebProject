@@ -12,10 +12,9 @@ namespace TaxiService.Controllers
 {
     public class DriverController : ApiController
     {
-        private static LocationBase CurrentLocation = null;
-        private static LocationBase Destination = null;
-        private static String CarType = CarRole.Not_Specified;
+
         private static DataAccess DB = DataAccess.CreateDb();
+
         public CustomPrincipal AuthUser
         {
             get
@@ -29,24 +28,6 @@ namespace TaxiService.Controllers
                     return null;
                 }
             }
-        }
-
-        [HttpPost,Route("api/Driver/AddDriver")]
-        public IHttpActionResult AddDriver(Driver data)
-        {
-            DataAccess db = DataAccess.CreateDb();
-            if (!db.DriverDb.ToList().Exists(p => p.Username == data.Username)
-                && !db.ClientDb.ToList().Exists(p => p.Username == data.Username)
-                && !db.DispacherDb.ToList().Exists(p => p.Username == data.Username))
-            {
-                data.RideList = new List<RideBase>();
-                data.CarID = 0;
-                data.Location = new LocationBase();
-                data.ID = db.DriverDb.ToList().Count + 1;
-                db.DriverDb.Add(data);
-            }
-            db.SaveChanges();
-            return Ok();
         }
 
         [HttpPost,Route("api/Driver/CompleteRide{id:int}")]
@@ -93,6 +74,65 @@ namespace TaxiService.Controllers
             }
             return NotFound();
 
+        }
+
+        [HttpGet,Route("api/Driver/getNewRides")]
+        public IHttpActionResult getNewRides()
+        {
+            lock (DB)
+            {
+                List<RideBase> result = DB.RideDb.ToList().Where(p => p.Status == RideStatus.Created).ToList();
+                result.ForEach(ride =>
+                {
+                    ride.Location = DB.LocationDb.ToList().Find(l => l.ID == ride.Location.ID);
+                    ride.Destination = DB.LocationDb.ToList().Find(d => d.ID == ride.Destination.ID);
+                });
+                return Ok(result);
+            }
+        }
+        [HttpGet, Route("api/Driver/getComment{id:int}")]
+        public IHttpActionResult getComment(int id)
+        {
+            lock (DB)
+            {
+                CommentBase comment = DB.CommentDb.ToList().Find(p => p.RideID == id);
+                return Ok(comment ?? new CommentBase());
+            }
+        }
+
+        [HttpGet,Route("api/Driver/getDriverRides")]
+        public IHttpActionResult getDriverRides()
+        {
+            lock (DB)
+            {
+                List<RideBase> result = DB.RideDb.ToList().Where(p=>p.TaxiRiderID == AuthUser.ID).ToList();
+                result.ForEach(ride =>
+                {
+                    ride.Location = DB.LocationDb.ToList().Find(l => l.ID == ride.Location.ID);
+                    ride.Destination = DB.LocationDb.ToList().Find(d => d.ID == ride.Destination.ID);
+                });
+                result = result.OrderBy(p => p.Status == RideStatus.Accepted).ToList();
+                return Ok(result);
+            }
+        }
+
+        [HttpPost,Route("api/Driver/AcceptRide{rideID:int}")]
+        public IHttpActionResult AcceptRide(int rideID)
+        {
+            lock (DB)
+            {
+                if (!DB.RideDb.ToList().Exists(p=> p.TaxiRiderID == AuthUser.ID && p.Status == RideStatus.Accepted))
+                {
+                    DB.RideDb.ToList().Find(p => p.ID == rideID).Status = RideStatus.Accepted;
+                    DB.RideDb.ToList().Find(p => p.ID == rideID).TaxiRiderID = AuthUser.ID;
+                    DB.SaveChanges();
+                    return Ok();
+                }
+                else
+                {
+                    return Content(HttpStatusCode.BadRequest, "Cannot accept another ride.");
+                }
+            }
         }
     }
 }

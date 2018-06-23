@@ -55,6 +55,7 @@ namespace TaxiService.Controllers
                 data.Car.OwnerID = data.Driver.ID;
                 data.Driver.CarID = data.Car.TaxiCarID;
                 data.Driver.RideList = new List<RideBase>();
+                data.Driver.Role = UserRole.DriverRole;
 
                 DB.UserDb.Add(new LoginBase()
                 {
