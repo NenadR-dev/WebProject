@@ -92,7 +92,12 @@
             });
 
             $('#finish').click(function () {
-                $.post('/api/Driver/SetPrice'+ $('#price').val());
+                let commentData = {
+                    Summary: $('#CommentSummary').val(),
+                    Stars: $('#StarComment').val()
+                }
+                $.post('/api/Driver/SetPrice' + $('#price').val());
+                $.post('/api/Driver/AddComment', commentData);
                 $.post('/api/Driver/CompleteRide').
                     done(function () {
                         var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
@@ -117,6 +122,15 @@
         <div class="col-md-10">
             <label>Price:</label>
             <input id="price" type="number" />
+        </div>
+        <h5>Leave a comment</h5>
+        <div class="col-md-10">
+            <label>Summary</label>
+            <textarea id="CommentSummary"></textarea>
+        </div>
+        <div class="col-md-10">
+            <label>Stars</label>
+            <input type="number" id="StarComment" max="5" min="1" maxlength="5" />
         </div>
     </div>
         <div class="col-md-10">

@@ -7,6 +7,7 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
 using TaxiService.Models;
+using TaxiService.Models.Base;
 using TaxiService.Models.Security;
 
 namespace TaxiService.Controllers
@@ -16,7 +17,8 @@ namespace TaxiService.Controllers
     {
 
         private static DataAccess DB = DataAccess.CreateDb();
-
+        private static FilterBase filter = null;
+        private static int currentRideID = 0;
 
         public CustomPrincipal AuthUser
         {
@@ -67,13 +69,33 @@ namespace TaxiService.Controllers
             }
         }
 
+        [HttpPost, Route("api/Driver/ApplyFilter")]
+        public IHttpActionResult ApplyFilter(FilterBase filterBase)
+        {
+            filter = filterBase;
+            if (filter.ToDate.ToString() == "01-Jan-01 12:00:00 AM")
+            {
+                filter.ToDate = DateTime.Now;
+            }
+            if (filter.ToPrice == 0)
+            {
+                filter.ToPrice = 90000;
+            }
+            if (filter.ToGrade == 0)
+            {
+                filter.ToGrade = 5;
+            }
+            filter.ToDate = filterBase.ToDate.AddDays(1);
+            return Ok();
+        }
+
         [HttpPost,Route("api/Driver/CompleteRide")]
         public IHttpActionResult CompleteRide()
         {
             lock (DB)
             {
-                int taxiDriverID = DB.DriverDb.ToList().Find(x => x.Username == AuthUser.Username).ID;
-                DB.RideDb.ToList().Find(p => p.TaxiRiderID == taxiDriverID && p.Status == RideStatus.Accepted).Status = RideStatus.Successful;
+                DB.RideDb.ToList().Find(p => p.ID == currentRideID).Status = RideStatus.Successful;
+
                 DB.SaveChanges();
                 return Ok();
             }
@@ -84,18 +106,25 @@ namespace TaxiService.Controllers
         {
             lock (DB)
             {
-                DB.RideDb.ToList().Find(p => p.ID == id).Status = RideStatus.Unsuccessful;
-                DB.SaveChanges();
-                return Ok();
+                try
+                {
+                    DB.RideDb.ToList().Find(p => p.ID == id).Status = RideStatus.Unsuccessful;
+                    DB.SaveChanges();
+                    return Ok();
+                }
+                catch
+                {
+                    return BadRequest();
+                }
             }
         }
 
-        [HttpPost,Route("api/Driver/addComment")]
-        public IHttpActionResult addComment(CommentBase data)
+        [HttpPost,Route("api/Driver/AddComment")]
+        public IHttpActionResult AddComment(CommentBase data)
         {
             lock (DB)
             {
-                RideBase ride = DB.RideDb.ToList().Find(p => p.ID == data.ID);
+                RideBase ride = DB.RideDb.ToList().Find(x => x.TaxiRiderID == DB.DriverDb.ToList().Find(y => y.Username == AuthUser.Username).ID && x.ID == currentRideID);
                 List<CommentBase> comment = DB.CommentDb.ToList();
                 if (!comment.Exists(p => p.RideID == data.ID))
                 {
@@ -105,12 +134,12 @@ namespace TaxiService.Controllers
                         Stars = data.Stars,
                         Summary = data.Summary,
                         OriginalPoster = AuthUser.Username,
-                        RideID = ride.ID
+                        RideID = currentRideID
                     });
                     ride.CommentID = data.ID;
                     DB.SaveChanges();
 
-                    return Ok(DB.CommentDb.ToList().Find(p => p.RideID == data.ID));
+                    return Ok();
                 }
                 return NotFound();
             }
@@ -158,11 +187,107 @@ namespace TaxiService.Controllers
                     {
                         ride.Status = RideStatus.Accepted;
                     }
+                    try
+                    {
+                        ride.CommentID = DB.CommentDb.ToList().Find(x => x.RideID == currentRideID).RideID;
+                    }
+                    catch
+                    {
+
+                    }
                 });
-                result = result.OrderByDescending(p => p.Status == RideStatus.Accepted).ToList();
+
+                if(filter != null)
+                {
+                    result = SortRides(result);
+                }
+
                 return Ok(result);
             }
         }
+
+        private static List<RideBase> SortRides(List<RideBase> sortedList)
+        {
+            //SearchByDate
+            sortedList = sortedList.Where(x => DateTime.Parse(x.RiderOrderDate) >= DateTime.Parse(filter.FromDate.ToShortDateString()) && DateTime.Parse(x.RiderOrderDate) <= DateTime.Parse(filter.ToDate.ToShortDateString())).ToList();
+
+            //SearchByPrice
+            sortedList = sortedList.Where(x => x.RidePrice >= filter.FromPrice && x.RidePrice <= filter.ToPrice).ToList();
+            //SearchByGrade
+            if (filter.FromGrade > 0)
+            {
+                List<RideBase> currentSort = new List<RideBase>();
+                sortedList.ForEach(x => currentSort.Add(x));
+                currentSort.RemoveAll(x => x.CommentID == 0);
+                List<RideBase> newSorted = new List<RideBase>();
+                currentSort.ForEach(x =>
+                {
+                    if (DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars >= filter.FromGrade && DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars <= filter.ToGrade)
+                    {
+                        newSorted.Add(x);
+                    }
+                });
+                sortedList = newSorted;
+            }
+
+            //filter options
+            if (!string.IsNullOrEmpty(filter.FilterStatus) && filter.FilterStatus != "None")
+            {
+                sortedList = sortedList.Where(x => string.Equals(filter.FilterStatus, x.Status)).ToList();
+            }
+            //Sort options
+            if (filter.SortDate == "Newest")
+            {
+                sortedList = sortedList.OrderByDescending(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+            }
+            if (filter.SortDate == "Oldest")
+            {
+                sortedList = sortedList.OrderBy(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+            }
+            if (filter.SortGrade == "Highest")
+            {
+                List<RideBase> order = new List<RideBase>();
+                sortedList.ForEach(x => order.Add(x));
+                order.RemoveAll(x => x.CommentID == 0);
+                order = order.OrderByDescending(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                List<RideBase> newList = new List<RideBase>();
+                order.ForEach(o =>
+                {
+                    newList.Add(o);
+                });
+                sortedList.ForEach(item =>
+                {
+                    if (!newList.Exists(p => p.ID == item.ID))
+                    {
+                        newList.Add(item);
+                    }
+                });
+                sortedList = newList;
+            }
+            if (filter.SortGrade == "Lowest")
+            {
+                List<RideBase> order = sortedList;
+                order.RemoveAll(x => x.CommentID == 0);
+                order = order.OrderBy(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                List<RideBase> newList = new List<RideBase>();
+                order.ForEach(o =>
+                {
+                    newList.Add(o);
+                });
+                sortedList.ForEach(item =>
+                {
+                    if (!newList.Exists(p => p.ID == item.ID))
+                    {
+                        newList.Add(item);
+                    }
+                });
+                sortedList = newList;
+            }
+            //end of sort
+            //
+            return sortedList;
+        }
+
 
         [HttpPost,Route("api/Driver/AcceptRide{rideID:int}")]
         public IHttpActionResult AcceptRide(int rideID)
@@ -190,7 +315,7 @@ namespace TaxiService.Controllers
             lock (DB)
             {
                 int taxiDriverID = DB.DriverDb.ToList().Find(x => x.Username == AuthUser.Username).ID;
-                RideBase currentRide = DB.RideDb.ToList().Find(x => x.TaxiRiderID == taxiDriverID && x.Status == "Accepted");
+                RideBase currentRide = DB.RideDb.ToList().Find(x => x.TaxiRiderID == taxiDriverID && x.ID == currentRideID);
                 LocationBase l = DB.LocationDb.ToList().Find(x => x.ID == currentRide.Destination.ID);
                 l.Place = data.Place;
                 l.StreetName = data.StreetName;
@@ -202,13 +327,22 @@ namespace TaxiService.Controllers
             }
         }
 
+        [HttpPost,Route("api/Driver/SetRideID{id:int}")]
+
+        public IHttpActionResult SetRideID(int id)
+        {
+            currentRideID = id;
+            return Ok();
+        }
         [HttpPost,Route("api/Driver/SetPrice{price:int}")]
+
         public IHttpActionResult SetPrice(int price)
         {
             lock (DB)
             {
                 int taxiDriverID = DB.DriverDb.ToList().Find(x => x.Username == AuthUser.Username).ID;
-                DB.RideDb.ToList().Find(x => x.TaxiRiderID == taxiDriverID && x.Status == RideStatus.Accepted).RidePrice = price;
+                DB.RideDb.ToList().Find(x => x.TaxiRiderID == taxiDriverID && x.ID == currentRideID).RidePrice = price;
+                DB.SaveChanges();
                 return Ok();
             }
         }

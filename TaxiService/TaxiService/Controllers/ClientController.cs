@@ -176,23 +176,80 @@ namespace TaxiService.Controllers
                     List<RideBase> sortedList = rides;
                     List<CommentBase> comments = DB.CommentDb.ToList();
 
+                    //SearchByDate
+                    sortedList = sortedList.Where(x => DateTime.Parse(x.RiderOrderDate) >= DateTime.Parse(filter.FromDate.ToShortDateString()) && DateTime.Parse(x.RiderOrderDate) <= DateTime.Parse(filter.ToDate.ToShortDateString())).ToList();
+
+                    //SearchByPrice
+                    sortedList = sortedList.Where(x => x.RidePrice >= filter.FromPrice && x.RidePrice <= filter.ToPrice).ToList();
+                    //SearchByGrade
+                    if(filter.FromGrade > 0)
+                    {
+                        sortedList.RemoveAll(x => x.CommentID == 0);
+                        List<RideBase> newSorted = new List<RideBase>();
+                        sortedList.ForEach(x =>
+                        {
+                            if (DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars >= filter.FromGrade && DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars <= filter.ToGrade)
+                            {
+                                newSorted.Add(x);
+                            }
+                        });
+                        sortedList = newSorted;
+                    }
+
+                   //filter options
                     if (!string.IsNullOrEmpty(filter.FilterStatus) && filter.FilterStatus !="None")
                     {
                         sortedList = sortedList.Where(x => string.Equals(filter.FilterStatus, x.Status)).ToList();
                     }
+                    //Sort options
                     if (filter.SortDate == "Newest")
-                    {
-                        sortedList = sortedList.OrderByDescending(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
-                    }
-                    if (filter.SortDate == "Oldest")
                     {
                         sortedList = sortedList.OrderBy(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
                     }
-
-                    sortedList = sortedList.Where(x=> DateTime.Parse(x.RiderOrderDate) >=DateTime.Parse( filter.FromDate.ToShortDateString()) && DateTime.Parse(x.RiderOrderDate) <= DateTime.Parse(filter.ToDate.ToShortDateString())).ToList();
-
-                   
-
+                    if (filter.SortDate == "Oldest")
+                    {
+                        sortedList = sortedList.OrderByDescending(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+                    }
+                    if(filter.SortGrade == "Highest")
+                    {
+                        List<RideBase> order = sortedList;
+                        order.RemoveAll(x => x.CommentID == 0);
+                        order = order.OrderByDescending(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                        List<RideBase> newList = new List<RideBase>();
+                        order.ForEach(o =>
+                        {
+                            newList.Add(o);
+                        });
+                        sortedList.ForEach(item =>
+                        {
+                            if(!newList.Exists(p=> p.ID == item.ID))
+                            {
+                                newList.Add(item);
+                            }
+                        });
+                        sortedList = newList;
+                    }
+                    if (filter.SortGrade == "Lowest")
+                    {
+                        List<RideBase> order = sortedList;
+                        order.RemoveAll(x => x.CommentID == 0);
+                        order = order.OrderBy(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                        List<RideBase> newList = new List<RideBase>();
+                        order.ForEach(o =>
+                        {
+                            newList.Add(o);
+                        });
+                        sortedList.ForEach(item =>
+                        {
+                            if (!newList.Exists(p => p.ID == item.ID))
+                            {
+                                newList.Add(item);
+                            }
+                        });
+                        sortedList = newList;
+                    }
+                    //end of sort
+                    //
                     return Ok(sortedList.Where(p => p.RideClient == user.ID));
                 }
             }
@@ -265,6 +322,18 @@ namespace TaxiService.Controllers
         public IHttpActionResult ApplyFilter(FilterBase filterBase)
         {
             filter = filterBase;
+            if(filter.ToDate.ToString() == "01-Jan-01 12:00:00 AM")
+            {
+                filter.ToDate = DateTime.Now;
+            }
+            if(filter.ToPrice == 0)
+            {
+                filter.ToPrice = 90000;
+            }
+            if(filter.ToGrade == 0)
+            {
+                filter.ToGrade = 5;
+            }
             filter.ToDate = filterBase.ToDate.AddDays(1);
             return Ok();
         }

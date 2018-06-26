@@ -7,6 +7,25 @@
     <script src="~/Scripts/jquery-1.10.2.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+
+            $(document).on('click', '#ApplyFilter', function () {
+                let Filterdata = {
+                    FilterStatus: $('#statusFilter').val(),
+                    SortDate: $('#SortDate').val(),
+                    SortGrade: $('#SortGrade').val(),
+                    FromDate: $('#FromDateSearch').val(),
+                    ToDate: $('#ToDateSearch').val(),
+                    FromGrade: $('#FromGradeSearch').val(),
+                    ToGrade: $('#ToGradeSearch').val(),
+                    FromPrice: $('#FromPriceSearch').val(),
+                    ToPrice: $('#ToPriceSearch').val()
+                }
+                $.post("/api/Driver/ApplyFilter", Filterdata)
+                    .done(function () {
+                        LoadRides();
+                    });
+            });
+
             function CheckIfBanned() {
                 $.get('/api/Driver/CheckIfBanned', function (data, status) {
                     if (data == true) {
@@ -60,7 +79,7 @@
                                      <div id="AcceptDiv${data[item].ID}"</div></div></div>`;
                     }
                     displayRides += `</div><br/><br/>`;
-                    $('#dispacherRidesDiv').html(displayRides);
+                    $('#driverRidesDiv').html(displayRides);
                     for (item in data) {
                         let currentComment = `#CommentSection${data[item].ID}`;
                         let currentAccept = `#AcceptDiv${data[item].ID}`;
@@ -83,10 +102,8 @@
                     }
                 });
             }
-            $(document).on('load', function () {
-                CheckIfBanned();
-                LoadRides();
-            });
+            $(document).on('load', LoadRides());
+
             $(document).on('click', '#AcceptBtn', function () {
                 let rideID = $(this).attr('name');
                 $.post("/api/Driver/AcceptRide" + rideID)
@@ -98,8 +115,12 @@
             });
 
             $(document).on('click', '#CompleteRideBtn', function () {
-                 var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
-               window.location.replace(path + "Taxi/FinishRide/");
+                $.post("/api/Driver/SetRideID" + $(this).attr('name'))
+                    .done(function () {
+                       var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                         window.location.replace(path + "Taxi/FinishRide/");
+                    });
+
             });
 
             $(document).on('click', '#CommentID', function () {
@@ -169,7 +190,68 @@
 </div>
 
 <div id="container" style="width:100%;">
-    <div id="dispacherRidesDiv" style="float:left; width:50%;" class="col-md-5 col-sm-pull-1"></div>
-    <div id="otherRidesDiv" style="float:right; width:50%;" class="col-md-5 col-sm-push-1"></div>
+    <div style="float:left; width:25%;" class="col-md-5 col-sm-pull-1">
+        <div style="border:groove">
+            <h3>Filters</h3>
+            <label>Filter by status: </label>
+            <select id="statusFilter">
+                <option value="None" selected="selected">None</option>
+                <option value="Created">Created</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Canceled">Canceled</option>
+                <option value="Successful">Successful</option>
+                <option value="Unsuccessful">Unsuccessful</option>
+            </select>
+        </div>
+        <br />
+        <div style="border:groove">
+            <h3>Sort by:</h3>
+            <label>Date</label>
+            <select id="SortDate">
+                <option value="None" selected="selected">None</option>
+                <option value="Newest">Newest</option>
+                <option value="Oldest">Oldest</option>
+            </select>
+            <label>Stars</label>
+            <select id="SortGrade">
+                <option value="None" selected="selected">None</option>
+                <option value="Highest">Highest</option>
+                <option value="Lowest">Lowest</option>
+            </select>
+        </div>
+        <br />
+        <div style="border:groove">
+            <h3>Search by</h3>
+            <h4>Order date:</h4>
+            <div>
+                <label>from:</label>
+                <input type="date" id="FromDateSearch" />
+                <label>to:</label>
+                <input type="date" id="ToDateSearch" />
+            </div>
+            <h4>Stars</h4>
+            <div>
+                <label>from:</label>
+                <input type="number" maxlength="1" max="5" min="1" id="FromGradeSearch" />
+                <label>to:</label>
+                <input type="number" max="5" min="1" maxlength="1" id="ToGradeSearch" />
+            </div>
+            <h4>Price</h4>
+            <div>
+                <label>from:</label>
+                <input type="number" id="FromPriceSearch" />
+                <label>to:</label>
+                <input type="number" id="ToPriceSearch" />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-default" id="ApplyFilter">Apply</button>
+    </div>
+
+    <div style="float:right; width:75%;" class="col-md-5 col-sm-push-1">
+        <h3>My Rides</h3>
+        <div id="driverRidesDiv"></div>
+        <h3>New Rides</h3>
+        <div id="otherRidesDiv"></div>
+    </div>
 </div>
 
