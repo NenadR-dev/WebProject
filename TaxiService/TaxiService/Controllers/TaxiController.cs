@@ -4,12 +4,14 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Web;
+using System.Web.Http.Cors;
 using System.Web.Mvc;
 using TaxiService.Models;
 using TaxiService.Models.Security;
 
 namespace TaxiService.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class TaxiController : Controller
     {
         public CustomPrincipal AuthUser
@@ -26,7 +28,7 @@ namespace TaxiService.Controllers
                 }
             }
         }
-
+        private static DataAccess DB = DataAccess.CreateDb();
         // GET: Taxi
         [Authorize]
         public ActionResult Index()
@@ -78,23 +80,37 @@ namespace TaxiService.Controllers
             }
         }
 
+        [Authorize]
+        public ActionResult FinishRide()
+        {
+            return View();
+        }
+        [Authorize]
+        public ActionResult SetLocation()
+        {
+            return View();
+        }
+
         public UserBase getUserFromDB()
         {
-            DataAccess db = DataAccess.CreateDb();
-            if (AuthUser.Role == UserRole.ClientRole)
+            lock (DB)
             {
-                return db.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
+
+                if (AuthUser.Role == UserRole.ClientRole)
+                {
+                    return DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
+                }
+                else if (AuthUser.Role == UserRole.DriverRole)
+                {
+                    return DB.DriverDb.ToList().Find(p => p.Username == AuthUser.Username);
+                }
+                else if (AuthUser.Role == UserRole.DispacherRole)
+                {
+                    return DB.DispacherDb.ToList().Find(p => p.Username == AuthUser.Username);
+                }
+                else
+                    return null;
             }
-            else if (AuthUser.Role == UserRole.DriverRole)
-            {
-                return db.DriverDb.ToList().Find(p => p.Username == AuthUser.Username);
-            }
-            else if (AuthUser.Role == UserRole.DispacherRole)
-            {
-                return db.DispacherDb.ToList().Find(p => p.Username == AuthUser.Username);
-            }
-            else
-                return null;
         }
 
     }

@@ -11,16 +11,32 @@
     <title>Taxi Service</title>
     <script src="~/Scripts/jquery-1.10.2.js"></script>
     <script type="text/javascript">
-        $('document').ready(function () {
+        $(document).ready(function () {
+
+            $('#ToDateSearch').val(new Date().getDate().toString());
+
+            function CheckIfBanned() {
+                $.get('/api/Client/CheckIfBanned', function (data, status) {
+                if (data == true) {
+                    alert("You got banned.");
+                    $.post("/api/Client/Logoff")
+                        .done(function () {
+                            var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                            window.location.replace(path + "Home");
+                        });
+                }
+            })
+            }
 
             function GenerateRides()
             {
+
                 $.get("/api/Client/getRides", function (data, status) {
                     let displayRides = "<div class=row>";
                     for (item in data) {
                         displayRides += `<div style="border-style: groove"><div style="border-style: outset">RideID: <input disabled="disabled" id="RideID_${data[item].ID}" value ="${data[item].ID}"/></div>`;
                         displayRides += `<table><tr><td style="padding:0 15px 0 15px;">Status</td><td style="padding:0 15px 0 15px;">Location</td><td style="padding:0 15px 0 15px;">Destination</td><td style="padding:0 15px 0 15px;">Price</td></tr>`;
-                        displayRides += `<tr><td style="padding:0 15px 0 15px;">${data[item].Status}</td><td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td><td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td><td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"><div id=otkaziBtn${data[item].ID}></div></td></tr></table>`;
+                        displayRides += `<tr><td style="padding:0 15px 0 15px;">${data[item].Status}</td><td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place} ${data[item].Location.ZipCode}</td><td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place} ${data[item].Location.ZipCode}</td><td style="padding:0 15px 0 15px;">${data[item].RidePrice}</td><td style="padding:0 15px 0 15px;"><div id=otkaziBtn${data[item].ID}></div></td></tr></table>`;
                         displayRides += `<div id="CommentSection${data[item].ID}"></div></div><br/><br/><br/><br/>`;
                     }
                     displayRides += `</div>`;
@@ -29,27 +45,56 @@
                         let currentComment = `#CommentSection${data[item].ID}`;
                         let currentOption = `#otkaziBtn${data[item].ID}`;
                         let btnHtml = "";
-                        if (data[item].Status == "Created" && data[item].AllocatedDispacher == null) {
+                        if (data[item].Status == "Created") {
                             btnHtml += `<button id="CancelBtn" name="${data[item].ID}" class="btn btn-default">Cancel</button>`;
                             $(currentOption).html(btnHtml);
                         }
-                        else {
-                            btnHtml += `<button disabled="disabled" class="btn btn-default">Cancel</button>`;
-                            $(currentOption).html(btnHtml);
-                        }
-                        if (data[item].Status == "Canceled") {
+                        if (data[item].Status == "Canceled" || data[item].Status == "Successful" || data[item].Status == "Unsuccessful") {
                             $.get("/api/Client/getComment" + data[item].ID, function (commentData, status) {
-                                let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
-                                commentDiv += `<div><table><caption>${commentData.ClientID.Username}</caption>`;
-                                commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
-                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Starts}</td></tr></table>`;
-                                commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
-                                $(currentComment).html(commentDiv);
+                                if (commentData.OriginalPoster != null) {
+                                    let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
+                                    commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
+                                    commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
+                                    commentDiv += `<tr><td>Stars: </td><td>${commentData.Stars}</td></tr></table>`;
+                                    commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
+                                    $(currentComment).html(commentDiv);
+                                }
+                                else {
+                                    if (data[item].Status != "Created" && data[item].Status != "Accepted") {
+                                        let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
+                                        let CommentID = data[item].ID;
+                                        CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
+                                        CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
+                                        $('#CommentSection' + CommentID).html(CommentForm);
+                                    }
+                                }
                             });
                         }
                     }
                 });
             }
+
+            $(document).on('click', '#ApplyFilter', function () {
+                let Filterdata = {
+                    FilterStatus: $('#statusFilter').val(),
+                    SortDate: $('#SortDate').val(),
+                    SortGrade: $('#SortGrade').val(),
+                    FromDate: $('#FromDateSearch').val(),
+                    ToDate: $('#ToDateSearch').val(),
+                    FromGrade: $('#FromGradeSearch').val(),
+                    ToGrade: $('#ToGradeSearch').val(),
+                    FromPrice: $('#FromPriceSearch').val(),
+                    ToPrice: $('#ToPriceSearch').val()
+                }
+                $.post("/api/Client/ApplyFilter", Filterdata)
+                    .done(function () {
+                        GenerateRides();
+                    });
+            });
+            $(document).on('load', function () {
+                CheckIfBanned();
+                GenerateRides();
+            });
 
             $.get("/api/Default/getUser", function (data, status) {
                 if (data.LoggedIn == false) {
@@ -60,23 +105,21 @@
             });
 
             $('#logoff').click(function () {
-                $.get("/api/Default/getUser", function (data, status) {
-                    $.post("/api/Client/Logoff", data)
-                        .done(function () {
-                            var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
-                            window.location.replace(path + "Home");
-                        })
-                        .fail(function () {
-                            alert("Error occured")
-                        });
-                });
+                $.post("/api/Client/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
             });
+
             $('#profile').click(function () {
                  var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
                  window.location.replace(path + "Taxi/U");
-          
-
             });
+
             $('#updateRides').click(function () {
                 GenerateRides();
             });
@@ -87,6 +130,10 @@
                 CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
                 CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
                 $('#CommentSection' + CommentID).html(CommentForm);
+                $.post("/api/Client/CancelRide" + CommentID)
+                    .done(function () {
+                        GenerateRides();
+                    })
             });
 
             $(document).on('click', '#CommentID', function () {
@@ -107,18 +154,69 @@
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-header">
         <a href="~/Taxi/OrderRide" class="navbar-brand">Order Ride</a>
+        <button class="navbar-brand" style="border:none; background-color:transparent;" id="updateRides">My Rides</button>
     </div>
     <div class="navbar-header navbar-right">
-        <button class="navbar-brand" id="profile">My Profile</button>
-        <button class="navbar-brand" id="logoff">Log Off</button>
+        <button class="navbar-brand" style="border:none; background-color:transparent;" id="profile">My Profile</button>
+        <button class="navbar-brand" style="border:none; background-color:transparent;" id="logoff">Log Off</button>
     </div>
 </div>
-
-<div class="row">
-    <div class="col-lg-10">
-        <button class="btn btn-default btn-info" id="updateRides">Check your ride</button>
+<div id="container" style="width:100%;">
+    <div style="float:left; width:60%;" class="col-sm-5 col-sm-pull-1">
+        <div style="border:groove">
+            <h3>Filters</h3>
+            <label>Filter by status: </label>
+            <select id="statusFilter">
+                <option value="None" selected="selected">None</option>
+                <option value="Created">Created</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Canceled">Canceled</option>
+                <option value="Successful">Successful</option>
+                <option value="Unsuccessful">Unsuccessful</option>
+            </select>
+        </div>
+        <br/>
+            <div style="border:groove">
+                <h3>Sort by:</h3>
+                <label>Date</label>
+                <select id="SortDate">
+                    <option value="None" selected="selected">None</option>
+                    <option value="Newest">Newest</option>
+                    <option value="Oldest">Oldest</option>
+                </select>
+                <label>Stars</label>
+                <select id="SortGrade">
+                    <option value="None" selected="selected">None</option>
+                    <option value="Highest">Highest</option>
+                    <option value="Lowest">Lowest</option>
+                </select>
+            </div>
+        <br/>
+        <div style="border:groove">
+            <h3>Search by</h3>
+            <h4>Order date:</h4>
+            <div>
+                <label>from:</label>
+                <input type="date" id="FromDateSearch" />
+                <label>to:</label>
+                <input type="date" id="ToDateSearch" />
+            </div>
+            <h4>Stars</h4>
+            <div>
+                <label>from:</label>
+                <input type="number" maxlength="1" max="5" min="1" id="FromGradeSearch" />
+                <label>to:</label>
+                <input type="number" max="5" min="1" maxlength="1" id="ToGradeSearch" />
+            </div>
+            <h4>Price</h4>
+            <div>
+                <label>from:</label>
+                <input type="number" id="FromPriceSearch"/>
+                <label>to:</label>
+                <input type="number" id="ToPriceSearch" />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-default" id="ApplyFilter">Apply</button>
     </div>
-    <div class="col-lg-10">
-        <div id="taxiOrders"></div>
-    </div>
+    <div id="taxiOrders" style="float:right; width:40%;" class="col-md-5 col-sm-push-1"></div>
 </div>

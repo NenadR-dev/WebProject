@@ -1,7 +1,117 @@
-﻿
-@{
-    ViewBag.Title = "ManageClients";
-}
+﻿<head>
+    <meta charset="utf-8" />
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        function LoadUsers() {
+            $.get('/api/Dispacher/GetAllClients', function (data, status) {
+                let clientTable = `<div class="row">`
+                for (item in data) {
+                    clientTable += `<div style="border: groove">
+                    <table><tr><td>Username</td><td>${data[item].Username}</td></tr>
+                    <tr><td>Firstname</td><td>${data[item].Firstname}</td></tr>
+                    <tr><td>Lastname</td><td>${data[item].Lastname}</td></tr></table>
+                    <button type="submit" class="btn btn-default" id="ClientBan" name="${data[item].ID}">Ban</button>
+                    <button type="submit" class="btn btn-default" id="ClientUnban" name="${data[item].ID}">Lift ban</button></div><br/>"`;
+                }
+                clientTable += `</div>`;
+                $('#ClientsDiv').html(clientTable);
+            });
+            $.get('/api/Dispacher/GetAllDrivers', function (data, status) {
+                let driverTable = `<div class="row">`
+                for (item in data) {
+                    driverTable += `<div style="border: groove">
+                    <table><tr><td>Username</td><td>${data[item].Username}</td></tr>
+                    <tr><td>Firstname</td><td>${data[item].Firstname}</td></tr>
+                    <tr><td>Lastname</td><td>${data[item].Lastname}</td></tr></table>
+                    <button type="submit" class="btn btn-default" id="DriverBan" name="${data[item].ID}"">Ban</button>
+                    <button type="submit" class="btn btn-default" id="DriverUnban" name="${data[item].ID}">Lift ban</button></div><br/>"`;
+                }
+                driverTable += `</div>`;
+                $('#DriversDiv').html(driverTable);
+            });
+        }
 
+        $(document).ready(function () {
+
+            $(document).on('click', '#DriverBan', function () {
+                let driverID = $(this).attr('name');
+                $.post('/api/Dispacher/BanDriver' + driverID).
+                    done(function (data) {
+                        alert(data);
+                        LoadUsers();
+                    })
+                    .fail(function (data) {
+                        alert(data);
+                    });
+            });
+            $(document).on('click', '#ClientBan', function () {
+                let clientID = $(this).attr('name');
+                $.post('/api/Dispacher/BanClient' + clientID).
+                    done(function (data) {
+                        alert(data);
+                        LoadUsers();
+                    })
+                    .fail(function (data) {
+                        alert(data);
+                    });
+            });
+            $(document).on('click', '#DriverUnban', function () {
+                let driverID = $(this).attr('name');
+                $.post('/api/Dispacher/UnbanDriver' + driverID).
+                    done(function (data) {
+                        alert(data);
+                        LoadUsers();
+                    })
+                    .fail(function (data) {
+                        alert(data);
+                    });
+            });
+            $(document).on('click', '#ClientUnban', function () {
+                let clientID = $(this).attr('name');
+                $.post('/api/Dispacher/UnbanClient' + clientID).
+                    done(function (data) {
+                        alert(data);
+                        LoadUsers();
+                    })
+                    .fail(function (data) {
+                        alert(data);
+                    });
+            });
+
+            $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                 window.location.replace(path + "Taxi/U");
+            });
+
+            $('#logoff').click(function () {
+                $.post("/api/Dispacher/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+            });
+        });
+        $(document).on('load', LoadUsers());
+    </script>
+</head>
 <h2>ManageClients</h2>
 
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-header">
+        <a href="~/Taxi/OrderRide" class="navbar-brand">Order Ride</a>
+        <a href="~/Taxi/AddDriver" class="navbar-brand">Add Driver</a>
+        <a href="~/Taxi/ManageClients" class="navbar-brand">Manage Clients</a>
+    </div>
+    <div class="navbar-header navbar-right">
+        <button class="navbar-brand" id="profile" style="background-color:transparent">My Profile</button>
+        <button class="navbar-brand" id="logoff" style="background-color:transparent">Log Off</button>
+    </div>
+</div>
+
+<div id="container" style="width:100%;">
+    <div id="ClientsDiv" style="float:left; width:50%;" class="col-md-5 col-sm-pull-1"></div>
+    <div id="DriversDiv" style="float:right; width:50%;" class="col-md-5 col-sm-push-1"></div>
+</div>

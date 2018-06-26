@@ -17,13 +17,12 @@ namespace TaxiService.Models
 
         public String CommentDate { get; set; }
 
-        //public int ClientID { get; set; }
-        public virtual Client ClientID { get; set; }
+        public String OriginalPoster { get; set; }
+        //public virtual Client ClientID { get; set; }
 
         public int RideID { get; set; }
         //public virtual RideBase CommentRide { get; set; }
 
-        [Range(0,5)]
         public int Stars { get; set; }
     }
 }

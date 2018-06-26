@@ -97,4 +97,6 @@ C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\obj\Debug\TaxiService.
 C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\TaxiService.dll.config
 C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\TaxiService.dll
 C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\TaxiService.pdb
-C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\obj\Debug\TaxiService.csprojResolveAssemblyReference.cache
+C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\System.Web.Cors.dll
+C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\System.Web.Http.Cors.dll
+C:\Users\Nenad\Desktop\WebProject\TaxiService\TaxiService\bin\System.Web.Http.Cors.xml

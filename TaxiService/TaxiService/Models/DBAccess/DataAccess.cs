@@ -29,5 +29,6 @@ namespace TaxiService.Models
         public virtual DbSet<CarBase> CarDb { get; set; }
         public virtual DbSet<LocationBase> LocationDb { get; set; }
         public virtual DbSet<LoginBase> UserDb { get; set; }
+        public virtual DbSet<BanBase> BlockDb { get; set; }
     }
 }

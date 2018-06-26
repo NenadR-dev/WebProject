@@ -7,6 +7,19 @@
     <script src="~/Scripts/jquery-1.10.2.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+            function CheckIfBanned() {
+                $.get('/api/Driver/CheckIfBanned', function (data, status) {
+                    if (data == true) {
+                        alert("You got banned.");
+                        $.post("/api/Driver/Logoff")
+                            .done(function () {
+                                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                                window.location.replace(path + "Home");
+                            });
+                    }
+                });
+            }
+
             function LoadRides() {
                 $.get("/api/Driver/getNewRides", function (data, status) {
                     let displayRides = "<div class=row>";
@@ -16,8 +29,8 @@
                         displayRides += `<tr><td style="padding:0 15px 0 15px;">${data[item].Status}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td>
-                                         <td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"></td><td style="padding:0 15px 0 15px;"></tr></table>`;
-                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div><br/><br/><br/><br/>`;
+                                         <td style="padding:0 15px 0 15px;">${data[item].RidePrice}</td><td style="padding:0 15px 0 15px;"></td><td style="padding:0 15px 0 15px;"></tr></table>`;
+                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div></div><br/><br/>`;
                     }
                     displayRides += `</div>`;
                     $('#otherRidesDiv').html(displayRides);
@@ -40,24 +53,24 @@
                                      <td style="padding:0 15px 0 15px;">Destination</td>
                                      <td style="padding:0 15px 0 15px;">Price</td></tr>`;
                         displayRides += `<tr><td style="padding:0 15px 0 15px;">${data[item].Status}</td>
-                                         <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td>
-                                         <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td>
-                                         <td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"></td></tr></table>`;
+                                         <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place} ${data[item].Location.ZipCode} </td>
+                                         <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place} ${data[item].Location.ZipCode}</td>
+                                         <td style="padding:0 15px 0 15px;">${data[item].RidePrice}</td><td style="padding:0 15px 0 15px;"></td></tr></table>`;
                         displayRides += `<div id="CommentSection${data[item].ID}"></div>
-                                     <div id="AcceptDiv${data[item].ID}"</div></div>`;
+                                     <div id="AcceptDiv${data[item].ID}"</div></div></div>`;
                     }
-                    displayRides += `</div></div><br/><br/>`;
+                    displayRides += `</div><br/><br/>`;
                     $('#dispacherRidesDiv').html(displayRides);
                     for (item in data) {
                         let currentComment = `#CommentSection${data[item].ID}`;
                         let currentAccept = `#AcceptDiv${data[item].ID}`;
                         let btnHtml = "";
                         $.get("/api/Driver/getComment" + data[item].ID, function (commentData, status) {
-                            if (commentData != undefined) {
+                            if (commentData.OriginalPoster != null) {
                                 let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
-                                commentDiv += `<div><table><caption>${commentData.ClientID.Username}</caption>`;
+                                commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
                                 commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
-                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Starts}</td></tr></table>`;
+                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Stars}</td></tr></table>`;
                                 commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
                                 $(currentComment).html(commentDiv);
                             }
@@ -70,7 +83,10 @@
                     }
                 });
             }
-
+            $(document).on('load', function () {
+                CheckIfBanned();
+                LoadRides();
+            });
             $(document).on('click', '#AcceptBtn', function () {
                 let rideID = $(this).attr('name');
                 $.post("/api/Driver/AcceptRide" + rideID)
@@ -80,13 +96,12 @@
                         alert("You cant accept another ride before finish the current ride");
                     });
             });
+
             $(document).on('click', '#CompleteRideBtn', function () {
-                let rideID = $(this).attr('name');
-                $.post("/api/Driver/CompleteRide" + rideID, )
-                    .done(function () {
-                        LoadRides();
-                    });
+                 var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+               window.location.replace(path + "Taxi/FinishRide/");
             });
+
             $(document).on('click', '#CommentID', function () {
                 let commentID = $(this).attr('name');
                 let commentData = {
@@ -106,18 +121,37 @@
             $(document).on('click', '#CancelBtn', function () {
                 let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
                 let CommentID = $(this).attr('name');
+                let currentAccept = `#AcceptDiv` + $(this).attr('name');
                 CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
                 CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
                 $('#CommentSection' + CommentID).html(CommentForm);
+                $(currentAccept).html("");
                 $.post("/api/Driver/CancelRide" + CommentID);
             });
 
             $('#getRides').click(function () {
                 LoadRides();
             });
-            $(document).load(function () {
-                LoadRides();
+
+            $('#setLocation').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+               window.location.replace(path + "Taxi/SetLocation");
             });
+
+            $('#logoff').click(function () {
+                $.post("/api/Driver/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+            });
+        });
+
+        $(document).load(function () {
+            LoadRides();
         });
     </script>
 </head>
@@ -126,6 +160,7 @@
     <div class="navbar-header">
         <a href="~/Taxi" class="navbar-brand">TAXI SERVICE</a>
         <button class="navbar-brand" type="submit" id="getRides" style="background-color:transparent; border:none">Check for Rides</button>
+        <button class="navbar-brand" type="submit" id="setLocation" style="background-color:transparent; border:none">Set my location</button>
     </div>
     <div class="navbar-header navbar-right">
         <button class="navbar-brand" id="profile" style="background-color:transparent">My Profile</button>

@@ -22,5 +22,14 @@ namespace TaxiService.Models
         public String Place { get; set; }
 
         public ushort ZipCode { get; set; }
+
+        public LocationBase()
+        {
+            StreetName = "";
+            Place = "";
+            ZipCode = 0;
+            XCoordinate = 0;
+            YCoordinate = 0;
+        }
     }
 }

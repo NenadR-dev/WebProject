@@ -12,6 +12,9 @@
                     .done(function (loggedUser) {
                         var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
                         window.location.replace(path + "Taxi");
+                    }).
+                    fail(function (retdata) {
+                        alert(retdata);
                     });
             });
         });

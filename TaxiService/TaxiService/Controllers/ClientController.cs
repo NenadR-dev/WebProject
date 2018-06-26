@@ -6,17 +6,19 @@ using System.Net.Http;
 using System.Threading;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using TaxiService.Models;
 using TaxiService.Models.Base;
 using TaxiService.Models.Security;
 
 namespace TaxiService.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class ClientController : ApiController
     {
         private static LocationBase CurrentLocation = null;
-        private static LocationBase Destination = null;
         private static String CarType = CarRole.Not_Specified;
+        private static FilterBase filter = new FilterBase();
         public CustomPrincipal AuthUser
         {
             get
@@ -32,71 +34,68 @@ namespace TaxiService.Controllers
             }
         }
 
-        DataAccess DB = DataAccess.CreateDb();
+        private static DataAccess DB = DataAccess.CreateDb();
 
         [HttpPost,Route("api/Client/AddClient")]
         [AllowAnonymous]
         public IHttpActionResult AddClient(Client data)
         {
-            if (!DB.DriverDb.ToList().Exists(p => p.Username == data.Username)
-                    && !DB.ClientDb.ToList().Exists(p => p.Username == data.Username)
-                    && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Username))
+            lock (DB)
             {
-                data.RideList = new List<RideBase>();
-               // data.ID = DB.ClientDb.ToList().Count() + 1;
-                data.Role = UserRole.ClientRole;
-                DB.UserDb.Add(new LoginBase()
+                if (!DB.DriverDb.ToList().Exists(p => p.Username == data.Username)
+                        && !DB.ClientDb.ToList().Exists(p => p.Username == data.Username)
+                        && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Username))
                 {
-                    Username = data.Username,
-                    Password = data.Password,
-                    Role = data.Role
-                });
-                DB.ClientDb.Add(data);
+                    data.RideList = new List<RideBase>();
+                    // data.ID = DB.ClientDb.ToList().Count() + 1;
+                    data.Role = UserRole.ClientRole;
+                    DB.UserDb.Add(new LoginBase()
+                    {
+                        Username = data.Username,
+                        Password = data.Password,
+                        Role = data.Role
+                    });
+                    DB.ClientDb.Add(data);
+                }
+                DB.SaveChanges();
+                return Ok(data);
             }
-            DB.SaveChanges();
-            return Ok(data);
         }
 
         [HttpPost,Route("api/Client/Update")]
         public IHttpActionResult Update(Client data)
         {
-            int id = DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == data.Username));
-            DB.ClientDb.ToList()[id].Password = data.Password;
-            DB.ClientDb.ToList()[id].ContactPhone = data.ContactPhone;
-            DB.ClientDb.ToList()[id].Email = data.Email;
-            DB.ClientDb.ToList()[id].Firstname = data.Firstname;
-            DB.ClientDb.ToList()[id].Lastname = data.Lastname;
-            DB.ClientDb.ToList()[id].Gender = data.Gender;
-            DB.ClientDb.ToList()[id].JMBG = data.JMBG;
-            DB.SaveChanges();
-            return Ok();
+            lock (DB)
+            {
+                int id = DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == data.Username));
+                DB.ClientDb.ToList()[id].Password = data.Password;
+                DB.ClientDb.ToList()[id].ContactPhone = data.ContactPhone;
+                DB.ClientDb.ToList()[id].Email = data.Email;
+                DB.ClientDb.ToList()[id].Firstname = data.Firstname;
+                DB.ClientDb.ToList()[id].Lastname = data.Lastname;
+                DB.ClientDb.ToList()[id].Gender = data.Gender;
+                DB.ClientDb.ToList()[id].JMBG = data.JMBG;
+                DB.SaveChanges();
+                return Ok();
+            }
         }
         
         [HttpPost,Route("api/Client/LogOff")]
         public IHttpActionResult LogOff(LoginBase data)
         {
-            System.Web.Security.FormsAuthentication.SignOut();
-            return Ok();
+            lock (DB)
+            {
+                System.Web.Security.FormsAuthentication.SignOut();
+                return Ok();
+            }
         }
 
         [HttpPost,Route("api/Client/AddLocation")]
         public IHttpActionResult AddLocation(LocationBase data)
         {
             CurrentLocation = data;
-            CurrentLocation.XCoordinate = 0;
-            CurrentLocation.YCoordinate = 10;
             return Ok();
         }
-        
-        [HttpPost,Route("api/Client/AddDestination")]
-        public IHttpActionResult AddDestination(LocationBase data)
-        {
-            Destination = data;
-            Destination.XCoordinate = 10;
-            Destination.YCoordinate = 0;
-            return Ok();
-        }
-
         [HttpPost,Route("api/Client/AddCarType/{id:int}")]
         public IHttpActionResult AddCarType(int id)
         {
@@ -118,11 +117,13 @@ namespace TaxiService.Controllers
         [HttpPost,Route("api/Client/OrderRide")]
         public IHttpActionResult OrderRide()
         {
-            try
+            lock (DB)
             {
-                Client LoggedClient = DB.ClientDb.ToList().Find(p=> p.Username == AuthUser.Username);
+                try
+                {
+                    Client LoggedClient = DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
 
-                LoggedClient.RideList = new List<RideBase>
+                    LoggedClient.RideList = new List<RideBase>
             {
                 new RideBase()
                 {
@@ -130,23 +131,30 @@ namespace TaxiService.Controllers
                     Status = RideStatus.Created,
                     RideClient = LoggedClient.ID,
                     CommentID = 0,
-                    Location = CurrentLocation,
-                    Destination = Destination,
+                    Location = new LocationBase(){
+                        Place = CurrentLocation.Place,
+                        StreetName = CurrentLocation.StreetName,
+                        XCoordinate = CurrentLocation.XCoordinate,
+                        YCoordinate = CurrentLocation.YCoordinate,
+                        ZipCode = CurrentLocation.ZipCode
+                    },
+                    Destination = new LocationBase(),
                     AdminID = 0,
                     RidePrice = 0,
                     RiderOrderDate = DateTime.Now.ToString(),
                     TaxiRiderID = 0
                 }
             };
-                DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username))] = LoggedClient;
+                    DB.ClientDb.ToList()[DB.ClientDb.ToList().IndexOf(DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username))] = LoggedClient;
 
-                DB.SaveChanges();
+                    DB.SaveChanges();
 
-                return Ok();
-            }
-            catch
-            {
-                return NotFound();
+                    return Ok();
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
 
         }
@@ -154,18 +162,42 @@ namespace TaxiService.Controllers
         [HttpGet,Route("api/Client/getRides")]
         public IHttpActionResult getRides()
         {
-            List<RideBase> rides = DB.RideDb.ToList();
-            Client user = DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
-            if (rides.Count != 0)
+            lock (DB)
             {
-                rides.ForEach(ride =>
+                List<RideBase> rides = DB.RideDb.ToList();
+                Client user = DB.ClientDb.ToList().Find(p => p.Username == AuthUser.Username);
+                if (rides.Count != 0)
                 {
-                    ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
-                    ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
-                });
-                return Ok(rides.Where(p=>p.RideClient == user.ID));
+                    rides.ForEach(ride =>
+                    {
+                        ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
+                        ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
+                    });
+                    List<RideBase> sortedList = rides;
+                    List<CommentBase> comments = DB.CommentDb.ToList();
+
+                    if (!string.IsNullOrEmpty(filter.FilterStatus) && filter.FilterStatus !="None")
+                    {
+                        sortedList = sortedList.Where(x => string.Equals(filter.FilterStatus, x.Status)).ToList();
+                    }
+                    if (filter.SortDate == "Newest")
+                    {
+                        sortedList = sortedList.OrderByDescending(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+                    }
+                    if (filter.SortDate == "Oldest")
+                    {
+                        sortedList = sortedList.OrderBy(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+                    }
+
+                    sortedList = sortedList.Where(x=> DateTime.Parse(x.RiderOrderDate) >=DateTime.Parse( filter.FromDate.ToShortDateString()) && DateTime.Parse(x.RiderOrderDate) <= DateTime.Parse(filter.ToDate.ToShortDateString())).ToList();
+
+                   
+
+                    return Ok(sortedList.Where(p => p.RideClient == user.ID));
+                }
             }
-            return NotFound();
+                return NotFound();
+            
             
         }
 
@@ -178,29 +210,63 @@ namespace TaxiService.Controllers
                 return Ok(comment ?? new CommentBase());
             }
         }
+
         [HttpPost,Route("api/Client/addComment")]
         public IHttpActionResult addComment(CommentBase data)
         {
-            RideBase ride = DB.RideDb.ToList().Find(p => p.ID == data.ID);
-            List<CommentBase> comment = DB.CommentDb.ToList();
-            if(!comment.Exists(p=>p.RideID == data.ID))
+            lock (DB)
             {
-                DB.CommentDb.Add(new CommentBase()
+                RideBase ride = DB.RideDb.ToList().Find(p => p.ID == data.ID);
+                List<CommentBase> comment = DB.CommentDb.ToList();
+                if (!comment.Exists(p => p.RideID == data.ID))
                 {
-                    CommentDate = DateTime.Now.ToString(),
-                    Stars = data.Stars,
-                    Summary = data.Summary,
-                    ClientID = DB.ClientDb.ToList().Find(p=>p.ID == ride.RideClient),
-                    RideID = ride.ID
-                });
-                ride.CommentID = data.ID;
-                ride.Status = RideStatus.Canceled;
-                DB.SaveChanges();
+                    DB.CommentDb.Add(new CommentBase()
+                    {
+                        CommentDate = DateTime.Now.ToString(),
+                        Stars = data.Stars,
+                        Summary = data.Summary,
+                        OriginalPoster = AuthUser.Username,
+                        RideID = ride.ID
+                    });
+                    ride.CommentID = data.ID;
+                    DB.SaveChanges();
 
-                return Ok(DB.CommentDb.ToList().Find(p => p.RideID == data.ID));
+                    return Ok(DB.CommentDb.ToList().Find(p => p.RideID == data.ID));
+                }
+                return NotFound();
             }
-            return NotFound();
+        }
+        [HttpGet, Route("api/Client/CheckIfBanned")]
+        public IHttpActionResult CheckIfBanned()
+        {
+            lock (DB)
+            {
+                if (DB.BlockDb.ToList().Exists(x => x.Username == AuthUser.Username))
+                {
+                    return Ok(true);
+                }
+                else
+                {
+                    return Ok(false);
+                }
+            }
+        }
+        [HttpPost,Route("api/Client/CancelRide{id:int}")]
+        public IHttpActionResult CancelRide(int id)
+        {
+            lock (DB)
+            {
+                DB.RideDb.ToList().Find(x => x.ID == id).Status = RideStatus.Canceled;
+                return Ok();
+            }
+        }
 
+        [HttpPost,Route("api/Client/ApplyFilter")]
+        public IHttpActionResult ApplyFilter(FilterBase filterBase)
+        {
+            filter = filterBase;
+            filter.ToDate = filterBase.ToDate.AddDays(1);
+            return Ok();
         }
     }
 }

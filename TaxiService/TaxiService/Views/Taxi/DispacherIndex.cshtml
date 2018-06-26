@@ -46,7 +46,7 @@
                                          <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"></td><td style="padding:0 15px 0 15px;"></tr></table>`;
-                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div><br/><br/><br/><br/>`;
+                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div></div><br/><br/>`;
                     }
                     displayRides += `</div>`;
                     $('#otherRidesDiv').html(displayRides);
@@ -54,19 +54,17 @@
                         let currentComment = `#CommentSection${data[item].ID}`;
                         let currentAssign = `#AssignDiv${data[item].ID}`;
                         $.get("/api/Dispacher/getComment" + data[item].ID, function (commentData, status) {
-                            if (commentData != undefined)
-                            {
+                            if (commentData != undefined) {
                                 let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
-                                commentDiv += `<div><table><caption>${commentData.ClientID.Username}</caption>`;
+                                commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
                                 commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
-                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Starts}</td></tr></table>`;
+                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Stars}</td></tr></table>`;
                                 commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
                                 $(currentComment).html(commentDiv);
                             }
                         });
-                        if (data[item].Status == "Created")
-                        {
-                            $.get("/api/Dispacher/getFreeDrivers/"+data[item].ID, function (drivers, status) {
+                        if (data[item].Status == "Created") {
+                            $.get("/api/Dispacher/getFreeDrivers/" + data[item].ID, function (drivers, status) {
                                 let assignData = `<div><label>Assign Driver</label></div>`;
                                 assignData += `<div><select name="${data[item].ID}" id="DriverID${drivers.ID}">`;
                                 for (node in drivers) {
@@ -89,19 +87,20 @@
                                          <td style="padding:0 15px 0 15px;">${data[item].Location.StreetName} ${data[item].Location.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Destination.StreetName} ${data[item].Destination.Place}</td>
                                          <td style="padding:0 15px 0 15px;">${data[item].Price}</td><td style="padding:0 15px 0 15px;"></td></tr></table>`;
-                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div><br/><br/><br/><br/>`;
+                        displayRides += `<div id="CommentSection${data[item].ID}"></div><div id="AssignDiv${data[item].ID}"</div></div></div><br/><br/>`;
                     }
                     displayRides += `</div>`;
                     $('#dispacherRidesDiv').html(displayRides);
+
                     for (item in data) {
                         let currentComment = `#CommentSection${data[item].ID}`;
                         let currentAssign = `#AssignDiv${data[item].ID}`;
+                        let RideID = data[item].ID;
                         let btnHtml = "";
-                        $.get("/api/Dispacher/getComment" + data[item].ID, function (commentData, status) {
-                            if (commentData != undefined)
-                            {
+                        $.get("/api/Dispacher/getComment" + RideID, function (commentData, status) {
+                            if (commentData != undefined) {
                                 let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
-                                commentDiv += `<div><table><caption>${commentData.ClientID.Username}</caption>`;
+                                commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
                                 commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
                                 commentDiv += `<tr><td>Stars: </td><td>${commentData.Starts}</td></tr></table>`;
                                 commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
@@ -109,24 +108,24 @@
                             }
                         });
                         if (data[item].Status == "Formated") {
-                            $.get("/api/Dispacher/getFreeDrivers/" + data[item].ID, function (drivers, status) {
+                            $.get("/api/Dispacher/getFreeDrivers/" + RideID, function (drivers, status) {
                                 let assignData = `<div><label>Assign Driver</label></div>`;
-                                assignData += `<div><select id="DriverID" name="${drivers.ID}">`;
+                                assignData += `<div><select id="SDriverID${RideID}">`;
                                 for (node in drivers) {
-                                    assignData += `<option value="${drivers.ID}">${drivers.Firstname} ${drivers.Lastname}</option>`;
+                                    assignData += `<option value="${drivers[node].ID}">${drivers[node].Firstname} ${drivers[node].Lastname}</option>`;
                                 }
                                 assignData += `</select></div>`;
-                                assignData += `<button id="assignDriverBtn" name="${drivers.ID}" class="btn btn-default" type="submit">Assign</button>`;
+                                assignData += `<button id="assignDriverBtn" name="${RideID}" class="btn btn-default" type="submit">Assign</button>`;
                                 $(currentAssign).html(assignData);
                             });
                         }
                     }
                 })
             }
-            $(document).on('click', '#assignDriverBtn',function () {
-                let ChosenDriverID = $(this).attr('name');
-                let ChosenDriver = $('#DriverID' + ChosenDriverID).val()
-                let ChosenRide = $('#DriverID' + ChosenDriverID).attr('name');
+            $(document).on('click', '#assignDriverBtn', function () {
+                let ChosenRide = $(this).attr('name');
+                let ChosenDriver = $('#SDriverID' + ChosenRide).val()
+                
                 let data = {
                     DriverID: ChosenDriver,
                     RideID: ChosenRide
@@ -147,10 +146,21 @@
                 LoadRides();
             });
 
-             $('#profile').click(function () {
-                 var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+            $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
                  window.location.replace(path + "Taxi/U");
-             });
+            });
+
+            $('#logoff').click(function () {
+                $.post("/api/Dispacher/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+            });
         });
 
 
