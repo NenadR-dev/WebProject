@@ -92,49 +92,52 @@
             });
 
             $('#finish').click(function () {
-                let commentData = {
-                    Summary: $('#CommentSummary').val(),
-                    Stars: $('#StarComment').val()
-                }
                 $.post('/api/Driver/SetPrice' + $('#price').val());
-                $.post('/api/Driver/AddComment', commentData);
                 $.post('/api/Driver/CompleteRide').
                     done(function () {
                         var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
                         window.location.replace(path + "Taxi");
                     });
             });
+                        $('#logoff').click(function () {
+                $.post("/api/Driver/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+            });
+                        $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                 window.location.replace(path + "Taxi/U");
+            });
         });
     </script>
 </head>
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-header">
-        <a href="~/Taxi/Index" class="navbar-brand">Home</a>
+        <a href="~/Taxi" class="navbar-brand">TAXI SERVICE</a>
+        <button class="navbar-brand" type="submit" id="getRides" style="background-color:transparent; border:none">Check for Rides</button>
+        <button class="navbar-brand" type="submit" id="setLocation" style="background-color:transparent; border:none">Set my location</button>
     </div>
     <div class="navbar-header navbar-right">
-        <button class="navbar-brand" id="profile">My Profile</button>
-        <button class="navbar-brand" id="logoff">Log Off</button>
+        <button class="navbar-brand" id="profile" style="background-color:transparent">My Profile</button>
+        <button class="navbar-brand" id="logoff" style="background-color:transparent">Log Off</button>
     </div>
 </div>
 <div class="row">
     <div id="map" class="map"></div>
     <div>
         <div class="col-md-10">
+            <h3>Set Price</h3>
             <label>Price:</label>
             <input id="price" type="number" />
         </div>
-        <h5>Leave a comment</h5>
-        <div class="col-md-10">
-            <label>Summary</label>
-            <textarea id="CommentSummary"></textarea>
-        </div>
-        <div class="col-md-10">
-            <label>Stars</label>
-            <input type="number" id="StarComment" max="5" min="1" maxlength="5" />
-        </div>
-    </div>
         <div class="col-md-10">
             <label>Order</label>
             <input type="submit" id="finish" class="btn btn-default" value="Complete"/>
         </div>
     </div>
+</div>

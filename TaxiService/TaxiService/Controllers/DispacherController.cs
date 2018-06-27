@@ -33,7 +33,27 @@ namespace TaxiService.Controllers
         }
 
         private static DataAccess DB = DataAccess.CreateDb();
+        private static FilterBase filter = null;
 
+        [HttpPost, Route("api/Dispacher/ApplyFilter")]
+        public IHttpActionResult ApplyFilter(FilterBase filterBase)
+        {
+            filter = filterBase;
+            if (filter.ToDate.ToString() == "01-Jan-01 12:00:00 AM")
+            {
+                filter.ToDate = DateTime.Now;
+            }
+            if (filter.ToPrice == 0)
+            {
+                filter.ToPrice = 90000;
+            }
+            if (filter.ToGrade == 0)
+            {
+                filter.ToGrade = 5;
+            }
+            filter.ToDate = filterBase.ToDate.AddDays(1);
+            return Ok();
+        }
         [HttpPost, Route("api/Dispacher/getDriver{id:int}")]
         public IHttpActionResult getDriver(int id)
         {
@@ -51,7 +71,7 @@ namespace TaxiService.Controllers
             {
                 if (!DB.DriverDb.ToList().Exists(p => p.Username == data.Driver.Username)
                         && !DB.ClientDb.ToList().Exists(p => p.Username == data.Driver.Username)
-                        && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Driver.Username))
+                        && !DB.DispacherDb.ToList().Exists(p => p.Username == data.Driver.Username) && !string.IsNullOrEmpty(data.Driver.Username))
                 {
                     if (DB.CarDb.ToList().Exists(x => x.TaxiCarID == data.Car.TaxiCarID))
                         return BadRequest();
@@ -200,11 +220,240 @@ namespace TaxiService.Controllers
                     });
                     List<RideBase> result = new List<RideBase>();
                     result = rides.Where(p => p.AdminID != user.ID).ToList();
+                    result = SortRides(result);
                     return Ok(result);
                 }
                 return NotFound();
             }
         }
+        private static List<RideBase> SortRides(List<RideBase> sortedList)
+        {
+            //SearchByDate
+            sortedList = sortedList.Where(x => DateTime.Parse(x.RiderOrderDate) >= DateTime.Parse(filter.FromDate.ToShortDateString()) && DateTime.Parse(x.RiderOrderDate) <= DateTime.Parse(filter.ToDate.ToShortDateString())).ToList();
+
+            //SearchByPrice
+            sortedList = sortedList.Where(x => x.RidePrice >= filter.FromPrice && x.RidePrice <= filter.ToPrice).ToList();
+            //SearchByGrade
+            if (filter.FromGrade > 0)
+            {
+                sortedList.RemoveAll(x => x.CommentID == 0);
+                List<RideBase> newSorted = new List<RideBase>();
+                sortedList.ForEach(x =>
+                {
+                    if (DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars >= filter.FromGrade && DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars <= filter.ToGrade)
+                    {
+                        newSorted.Add(x);
+                    }
+                });
+                sortedList = newSorted;
+            }
+
+
+            //SearchByClientName
+            if (!string.IsNullOrEmpty(filter.FirstnameClient))
+            {
+                if (!string.IsNullOrEmpty(filter.LastnameClient))
+                {
+                    List<RideBase> newSort = new List<RideBase>();
+                    sortedList.ForEach(x =>
+                    {
+                        if (DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Firstname == filter.FirstnameClient && DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Lastname == filter.LastnameClient)
+                        {
+                            newSort.Add(x);
+                        }
+                    });
+                    sortedList = newSort;
+                }
+                else
+                {
+                    List<RideBase> newSort = new List<RideBase>();
+                    sortedList.ForEach(x =>
+                    {
+                        if (DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Firstname == filter.FirstnameClient)
+                        {
+                            newSort.Add(x);
+                        }
+                    });
+                    sortedList = newSort;
+                }
+            }
+            if (!string.IsNullOrEmpty(filter.LastnameClient))
+            {
+                if (!string.IsNullOrEmpty(filter.FirstnameClient))
+                {
+                    List<RideBase> newSort = new List<RideBase>();
+                    sortedList.ForEach(x =>
+                    {
+                        if (DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Firstname == filter.FirstnameClient && DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Lastname == filter.LastnameClient)
+                        {
+                            newSort.Add(x);
+                        }
+                    });
+                    sortedList = newSort;
+                }
+                else
+                {
+                    List<RideBase> newSort = new List<RideBase>();
+                    sortedList.ForEach(x =>
+                    {
+                        if (DB.ClientDb.ToList().Find(y => y.ID == x.RideClient).Lastname == filter.LastnameClient)
+                        {
+                            newSort.Add(x);
+                        }
+                    });
+                    sortedList = newSort;
+                }
+            }
+            //SearchByDriverName
+            if (!string.IsNullOrEmpty(filter.FirstnameDriver))
+            {
+                List<RideBase> newSort = new List<RideBase>();
+                if (!string.IsNullOrEmpty(filter.LastnameDriver))
+                {
+                    Driver d = DB.DriverDb.ToList().Find(x => x.Firstname == filter.FirstnameDriver && filter.LastnameDriver == x.Lastname);
+                    if(d != null)
+                    {
+
+                        sortedList.ForEach(x =>
+                        {
+                            if (x.TaxiRiderID == d.ID)
+                            {
+                                newSort.Add(x);
+                            }
+                        });
+                        sortedList = newSort;
+                    }
+                    else
+                    {
+                        sortedList = new List<RideBase>();
+                    }
+                }
+                else
+                {
+                    Driver d = DB.DriverDb.ToList().Find(x => x.Firstname == filter.FirstnameDriver);
+                    if (d != null)
+                    {
+                        sortedList.ForEach(x =>
+                        {
+                            if (x.TaxiRiderID == d.ID)
+                            {
+                                newSort.Add(x);
+                            }
+                        });
+                        sortedList = newSort;
+                    }
+                    else
+                    {
+                        sortedList = new List<RideBase>();
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(filter.LastnameDriver))
+            {
+                List<RideBase> newSort = new List<RideBase>();
+                if (!string.IsNullOrEmpty(filter.FirstnameDriver))
+                {
+                    Driver d = DB.DriverDb.ToList().Find(x => x.Firstname == filter.FirstnameDriver && filter.LastnameDriver == x.Lastname);
+                    if (d != null)
+                    {
+
+                        sortedList.ForEach(x =>
+                        {
+                            if (x.TaxiRiderID == d.ID)
+                            {
+                                newSort.Add(x);
+                            }
+                        });
+                        sortedList = newSort;
+                    }
+                    else
+                    {
+                        sortedList = new List<RideBase>();
+                    }
+
+                }
+                else
+                {
+                    Driver d = DB.DriverDb.ToList().Find(x => x.Lastname == filter.LastnameDriver);
+                    if (d != null)
+                    {
+                        sortedList.ForEach(x =>
+                        {
+                            if (x.TaxiRiderID == d.ID)
+                            {
+                                newSort.Add(x);
+                            }
+                        });
+                        sortedList = newSort;
+                    }
+                    else
+                    {
+                        sortedList = new List<RideBase>();
+                    }
+                }
+            }
+
+            //filter options
+            if (!string.IsNullOrEmpty(filter.FilterStatus) && filter.FilterStatus != "None")
+            {
+                sortedList = sortedList.Where(x => string.Equals(filter.FilterStatus, x.Status)).ToList();
+            }
+            //Sort options
+            if (filter.SortDate == "Newest")
+            {
+                sortedList = sortedList.OrderByDescending(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+            }
+            if (filter.SortDate == "Oldest")
+            {
+                sortedList = sortedList.OrderBy(x => x.RiderOrderDate).ThenBy(x => x.RiderOrderDate).ToList();
+            }
+            if (filter.SortGrade == "Highest")
+            {
+                List<RideBase> order = new List<RideBase>();
+                sortedList.ForEach(x => order.Add(x));
+                order.RemoveAll(x => x.CommentID == 0);
+                order = order.OrderByDescending(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                List<RideBase> newList = new List<RideBase>();
+                order.ForEach(o =>
+                {
+                    newList.Add(o);
+                });
+                sortedList.ForEach(item =>
+                {
+                    if (!newList.Exists(p => p.ID == item.ID))
+                    {
+                        newList.Add(item);
+                    }
+                });
+                sortedList = newList;
+            }
+            if (filter.SortGrade == "Lowest")
+            {
+                List<RideBase> order = new List<RideBase>();
+                sortedList.ForEach(x => order.Add(x));
+                order.RemoveAll(x => x.CommentID == 0);
+                order = order.OrderBy(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
+                List<RideBase> newList = new List<RideBase>();
+                order.ForEach(o =>
+                {
+                    newList.Add(o);
+                });
+                sortedList.ForEach(item =>
+                {
+                    if (!newList.Exists(p => p.ID == item.ID))
+                    {
+                        newList.Add(item);
+                    }
+                });
+                sortedList = newList;
+            }
+            //end of sort
+            //
+            return sortedList;
+        }
+
+
+
         [HttpGet, Route("api/Dispacher/getDispacherRides")]
         public IHttpActionResult getDispacherRides()
         {
@@ -220,7 +469,8 @@ namespace TaxiService.Controllers
                         ride.Location = DB.LocationDb.ToList().Find(p => p.ID == ride.Location.ID);
                         ride.Destination = DB.LocationDb.ToList().Find(p => p.ID == ride.Destination.ID);
                     });
-                    return Ok(rides.Where(p => p.AdminID == user.ID));
+                    rides = SortRides(rides.Where(p => p.AdminID == user.ID).ToList());
+                    return Ok(rides);
                 }
                 return NotFound();
             }

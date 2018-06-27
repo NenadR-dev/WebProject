@@ -1,17 +1,58 @@
 ﻿<html>
 <head>
+    <style>
+        body {
+            /* Safari 4-5, Chrome 1-9 */
+            background: -webkit-gradient(radial, center center, 0, center center, 460, from(#1a82f7), to(#2F2727));
+            /* Safari 5.1+, Chrome 10+ */
+            background: -webkit-radial-gradient(circle, #1a82f7, #2F2727);
+            /* Firefox 3.6+ */
+            background: -moz-radial-gradient(circle, #1a82f7, #2F2727);
+            /* IE 10 */
+            background: -ms-radial-gradient(circle, #1a82f7, #2F2727);
+            height: 600px;
+        }
+
+        .centered-form {
+            margin-top: 60px;
+        }
+
+            .centered-form .panel {
+                background: rgba(255, 255, 255, 0.8);
+                box-shadow: rgba(0, 0, 0, 0.3) 20px 20px 20px;
+            }
+
+        label.label-floatlabel {
+            font-weight: bold;
+            color: #46b8da;
+            font-size: 11px;
+        }
+    </style>
     <meta charset="utf-8" />
     <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript">
+
+        function validatephone(phone)
+        {
+            phone.value = phone.value.replace(/[^0-9-'\n\r.]+/g, '');
+        }
+        function ValidateText(txt) {
+            txt.value = txt.value.replace(/[^a-zA-Z-'\n\r.]+/g, '');
+        }
+
+
+
         $('document').ready(function () {
-            $('#add').click(function () {
+            $('#register').click(function () {
                 let data = {
                     Username: $('#username').val(),
                     Password: $('#password').val(),
                     Firstname: $('#firstname').val(),
                     Lastname: $('#lastname').val(),
                     JMBG: $('#jmbg').val(),
-                    ContactPhone: $('#contactphone').val(),
+                    ContactPhone: $('#phone').val(),
                     Email: $('#email').val(),
                     Gender: $('#gender').val(),
                 }
@@ -29,44 +70,57 @@
     </script>
 </head>
 <body>
-    <div class="row" style="padding-top:20px">
-        <div class="col-md-10">
-            <label>Username: </label>
-            <input type="text" id="username" name="username" />
-        </div>
-        <div class="col-md-10">
-            <label>Password: </label>
-            <input type="password" id="password" name="password" />
-        </div>
-        <div class="col-md-10">
-            <label>Firstname: </label>
-            <input type="text" id="firstname" name="firstname" />
-        </div>
-        <div class="col-md-10">
-            <label>Lastname: </label>
-            <input type="text" id="lastname" name="lastname" />
-        </div>
-        <div class="col-md-10">
-            <label>Gender: </label>
-            <select id="gender" name="gender">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-        </div>
-        <div class="col-md-10">
-            <label>JMBG: </label>
-            <input type="number" id="jmbg" name="jmbg" />
-        </div>
-        <div class="col-md-10">
-            <label>ContactPhone: </label>
-            <input type="number" id="contactphone" name="contactphone" />
-        </div>
-        <div class="col-md-10">
-            <label>Email: </label>
-            <input type="email" id="email" name="email" />
-        </div>
-        <div class=" col-md-10">
-            <input type="submit" value="Add" id="add" name="add" />
+    <div class="container">
+        <div class="row centered-form">
+            <div class="col-xs-12 col-sm-8 col-md-4 col-sm-offset-2 col-md-offset-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Please sign up</h3>
+                    </div>
+                    <div class="panel-body">
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" name="first_name" id="first_name" class="form-control input-sm floatlabel" onkeyup="ValidateText(this)" placeholder="First Name">
+                                    </div>
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" name="last_name" id="last_name" class="form-control input-sm" placeholder="Last Name" onkeyup="ValidateText(this)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="email" id="email" class="form-control input-sm" placeholder="Email Address">
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" name="username" id="username" class="form-control input-sm" placeholder="Username">
+                                    </div>
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <input type="password" name="password" id="password" class="form-control input-sm" placeholder="Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="number" name="jmbg" id="jmbg" class="form-control input-sm" placeholder="JMBG" onkeypress="validatephone(this)">
+                            </div>
+                            <div class="form-group">
+                                <select type="number" name="gender" id="gender" class="form-control input-sm" placeholder="Gender">
+                                    <option value="Male" selected>Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input type="number" name="phone" id="phone" class="form-control input-sm" placeholder="Phone Number" onkeyup="validatephone(this)">
+                            </div>
+                            <input type="submit" value="Register" id="register" class="btn btn-info btn-block">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

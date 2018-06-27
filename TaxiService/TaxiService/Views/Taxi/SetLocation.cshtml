@@ -9,6 +9,27 @@
         }
     </style>
     <script src="https://openlayers.org/en/v4.6.5/build/ol.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+                $('#logoff').click(function () {
+                $.post("/api/Driver/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+                 });
+                        $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                 window.location.replace(path + "Taxi/U");
+            });
+
+        });
+    </script>
     <title>OpenLayers example</title>
 </head>
 <body>
@@ -17,8 +38,8 @@
         <a href="~/Taxi/Index" class="navbar-brand">Home</a>
     </div>
     <div class="navbar-header navbar-right">
-        <button class="navbar-brand" id="profile">My Profile</button>
-        <button class="navbar-brand" id="logoff">Log Off</button>
+        <button class="navbar-brand" id="profile" style="background-color:transparent">My Profile</button>
+        <button class="navbar-brand" id="logoff" style="background-color:transparent">Log Off</button>
     </div>
 </div>
     <h2>Choose Location</h2>

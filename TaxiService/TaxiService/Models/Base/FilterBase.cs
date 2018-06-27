@@ -18,5 +18,9 @@ namespace TaxiService.Models.Base
         public int ToGrade { get; set; }
         public int FromPrice { get; set; }
         public int ToPrice { get; set; }
+        public String FirstnameDriver { get; set; }
+        public String LastnameDriver { get; set; }
+        public String FirstnameClient { get; set; }
+        public String LastnameClient { get; set; }
     }
 }

@@ -27,6 +27,22 @@
                         alert("Error occured")
                     });
             });
+
+                $('#logoff').click(function () {
+                $.post("/api/Driver/Logoff")
+                    .done(function () {
+                        var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                        window.location.replace(path + "Home");
+                    })
+                    .fail(function () {
+                        alert("Error occured")
+                    });
+            });
+                        $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                 window.location.replace(path + "Taxi/U");
+            });
+
         });
     </script>
 </head>
@@ -35,8 +51,8 @@
         <a href="~/Taxi/Index" class="navbar-brand">Home</a>
     </div>
     <div class="navbar-header navbar-right">
-        <button class="navbar-brand" id="profile">My Profile</button>
-        <button class="navbar-brand" id="logoff">Log Off</button>
+        <button class="navbar-brand" id="profile" style="background-color:transparent">My Profile</button>
+        <button class="navbar-brand" id="logoff" style="background-color:transparent">Log Off</button>
     </div>
 </div>
 

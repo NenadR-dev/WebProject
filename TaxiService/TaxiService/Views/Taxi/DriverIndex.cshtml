@@ -147,6 +147,7 @@
                 CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
                 $('#CommentSection' + CommentID).html(CommentForm);
                 $(currentAccept).html("");
+                $.post("/api/Driver/SetRideID" + $(this).attr('name'));
                 $.post("/api/Driver/CancelRide" + CommentID);
             });
 
@@ -159,7 +160,7 @@
                window.location.replace(path + "Taxi/SetLocation");
             });
 
-            $('#logoff').click(function () {
+             $('#logoff').click(function () {
                 $.post("/api/Driver/Logoff")
                     .done(function () {
                         var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
@@ -168,6 +169,10 @@
                     .fail(function () {
                         alert("Error occured")
                     });
+            });
+                        $('#profile').click(function () {
+                var path = @Html.Raw(HttpUtility.JavaScriptStringEncode(Url.Content("~/"), true));
+                 window.location.replace(path + "Taxi/U");
             });
         });
 

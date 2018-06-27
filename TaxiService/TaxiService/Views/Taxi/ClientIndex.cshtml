@@ -49,27 +49,32 @@
                             btnHtml += `<button id="CancelBtn" name="${data[item].ID}" class="btn btn-default">Cancel</button>`;
                             $(currentOption).html(btnHtml);
                         }
-                        if (data[item].Status == "Canceled" || data[item].Status == "Successful" || data[item].Status == "Unsuccessful") {
-                            $.get("/api/Client/getComment" + data[item].ID, function (commentData, status) {
-                                if (commentData.OriginalPoster != null) {
-                                    let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
-                                    commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
-                                    commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
-                                    commentDiv += `<tr><td>Stars: </td><td>${commentData.Stars}</td></tr></table>`;
-                                    commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
-                                    $(currentComment).html(commentDiv);
+                        $.get("/api/Client/getComment" + data[item].ID, function (commentData, status) {
+                            if (commentData.OriginalPoster != undefined) {
+                                let commentDiv = `<div style="border-style: inset;left: 30px"><div>Comment</div"`;
+                                commentDiv += `<div><table><caption>${commentData.OriginalPoster}</caption>`;
+                                commentDiv += `<tr><td>Comment</td><td><textarea readonly="readonly">${commentData.Summary}</textarea></td></tr>`;
+                                commentDiv += `<tr><td>Stars: </td><td>${commentData.Stars}</td></tr></table>`;
+                                commentDiv += `<p style="text-indent: 80%">${commentData.CommentDate}</p></div></div>`;
+                                $(currentComment).html(commentDiv);
+                            }
+                            else {
+                                if (data[item].Status == "Successful") {
+                                    let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
+                                    let CommentID = data[item].ID;
+                                    CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
+                                    CommentForm += `<div><input type="submit" name="${CommentID}" id="SuccessfulCommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
+                                    $('#CommentSection' + CommentID).html(CommentForm);
                                 }
-                                else {
-                                    if (data[item].Status != "Created" && data[item].Status != "Accepted") {
-                                        let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
-                                        let CommentID = data[item].ID;
-                                        CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
-                                        CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
-                                        $('#CommentSection' + CommentID).html(CommentForm);
-                                    }
+                                if (data[item].Status == "Canceled") {
+                                    let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
+                                    let CommentID = data[item].ID;
+                                    CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
+                                    CommentForm += `<div><input type="submit" name="${CommentID}" id="CancelCommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
+                                    $('#CommentSection' + CommentID).html(CommentForm);
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 });
             }
@@ -128,25 +133,33 @@
                 let CommentForm = `<div style="border-style: inset;left: 30px"><div>Comment</div>`;
                 let CommentID = $(this).attr('name');
                 CommentForm += `<div><textarea cols="40" rows="5" type="text" id="Com_${CommentID}" name="CommentText"></textarea></div>`;
-                CommentForm += `<div><input type="submit" name="${CommentID}" id="CommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
+                CommentForm += `<div><input type="submit" name="${CommentID}" id="CancelCommentID"/><label>Stars:</label> <input id="starField_${CommentID}" type="number" required="required" min="1" maxlength="1" max="5" range="1"</div></div>`;
                 $('#CommentSection' + CommentID).html(CommentForm);
-                $.post("/api/Client/CancelRide" + CommentID)
-                    .done(function () {
-                        GenerateRides();
-                    })
             });
 
-            $(document).on('click', '#CommentID', function () {
+            $(document).on('click', '#SuccessfulCommentID', function () {
                 let data = {
                     ID: $(this).attr('name'),
                     Summary: $('#Com_' + $(this).attr('name')).val(),
                     Stars: $('#starField_' + $(this).attr('name')).val()
                 }
-
                 $.post("/api/Client/addComment", data)
                     .done(function (data) {
                         GenerateRides();
-                    })
+                    });
+            });
+
+            $(document).on('click', '#CancelCommentID', function () {
+                let data = {
+                    ID: $(this).attr('name'),
+                    Summary: $('#Com_' + $(this).attr('name')).val(),
+                    Stars: $('#starField_' + $(this).attr('name')).val()
+                }
+                $.post("/api/Client/CancelRide" + data.ID);
+                $.post("/api/Client/addComment", data)
+                    .done(function (data) {
+                        GenerateRides();
+                    });
             });
         });
     </script>

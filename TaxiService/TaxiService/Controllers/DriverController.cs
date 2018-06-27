@@ -216,11 +216,9 @@ namespace TaxiService.Controllers
             //SearchByGrade
             if (filter.FromGrade > 0)
             {
-                List<RideBase> currentSort = new List<RideBase>();
-                sortedList.ForEach(x => currentSort.Add(x));
-                currentSort.RemoveAll(x => x.CommentID == 0);
+                sortedList.RemoveAll(x => x.CommentID == 0);
                 List<RideBase> newSorted = new List<RideBase>();
-                currentSort.ForEach(x =>
+                sortedList.ForEach(x =>
                 {
                     if (DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars >= filter.FromGrade && DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars <= filter.ToGrade)
                     {
@@ -229,6 +227,7 @@ namespace TaxiService.Controllers
                 });
                 sortedList = newSorted;
             }
+
 
             //filter options
             if (!string.IsNullOrEmpty(filter.FilterStatus) && filter.FilterStatus != "None")
@@ -266,7 +265,8 @@ namespace TaxiService.Controllers
             }
             if (filter.SortGrade == "Lowest")
             {
-                List<RideBase> order = sortedList;
+                List<RideBase> order = new List<RideBase>();
+                sortedList.ForEach(x => order.Add(x));
                 order.RemoveAll(x => x.CommentID == 0);
                 order = order.OrderBy(x => DB.CommentDb.ToList().Find(y => y.RideID == x.CommentID).Stars).ToList();
                 List<RideBase> newList = new List<RideBase>();
